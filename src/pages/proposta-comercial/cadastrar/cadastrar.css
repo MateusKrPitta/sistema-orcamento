@@ -1,0 +1,180 @@
+/* Arquivo: CadastroPropostaComercial.css */
+
+.pagina-a4 {
+  width: 100%;
+  min-height: 297mm;
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  direction: ltr !important;
+}
+
+/* ESTILOS DO EDITOR */
+.DraftEditor-root {
+  direction: ltr !important;
+  height: 100% !important;
+}
+
+.public-DraftStyleDefault-block {
+  text-align: inherit !important;
+  direction: ltr !important;
+  margin: 0.5em 0 !important;
+}
+
+/* ESTILOS PARA PRÉ-VISUALIZAÇÃO */
+.editor-conteudo {
+  direction: ltr !important;
+  line-height: 1.6 !important;
+  color: #000 !important;
+}
+
+/* Estilos específicos para elementos dentro da pré-visualização */
+.editor-conteudo > div,
+.editor-conteudo h1,
+.editor-conteudo h2,
+.editor-conteudo h3 {
+  all: initial !important;
+  display: block !important;
+  margin: 0.5em 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+.editor-conteudo h1 {
+  font-size: 2em !important;
+  font-weight: bold !important;
+}
+
+.editor-conteudo h2 {
+  font-size: 1.5em !important;
+  font-weight: bold !important;
+}
+
+.editor-conteudo [style*="text-align"] {
+  all: unset !important;
+}
+
+/* Remover qualquer estilo que possa estar interferindo */
+.editor-conteudo * {
+  text-align: inherit !important;
+}
+
+.editor-conteudo h3 {
+  font-size: 1.17em !important;
+  font-weight: bold !important;
+}
+
+.editor-conteudo ul,
+.editor-conteudo ol {
+  margin: 1em 0 !important;
+  padding-left: 40px !important;
+  text-align: inherit !important;
+}
+
+.editor-conteudo ul {
+  list-style-type: disc !important;
+}
+
+.editor-conteudo ol {
+  list-style-type: decimal !important;
+}
+
+.editor-conteudo li {
+  margin: 0.25em 0 !important;
+  text-align: inherit !important;
+}
+
+/* Classes para alinhamento no editor */
+.block-align-left {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
+.block-align-center {
+  text-align: center !important;
+  direction: ltr !important;
+}
+
+.block-align-right {
+  text-align: right !important;
+  direction: ltr !important;
+}
+
+.block-align-justify {
+  text-align: justify !important;
+  direction: ltr !important;
+}
+
+/* Estilos dinâmicos que precisam ser mantidos no componente */
+.dynamic-styles {
+  font-family: var(--font-family, Arial) !important;
+  font-size: var(--font-size, 14px) !important;
+}
+
+/* Estilos para evitar quebra de página desnecessária */
+.pagina-a4 {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+.pagina-a4 * {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  max-height: none !important;
+}
+
+.preview-container {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.paginas-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Estilos específicos para o conteúdo do editor no PDF */
+.editor-conteudo div,
+.editor-conteudo h1,
+.editor-conteudo h2,
+.editor-conteudo h3,
+.editor-conteudo p,
+.editor-conteudo li {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  orphans: 3 !important;
+  widows: 3 !important;
+}
+
+/* Estilos específicos para o PDF */
+.pagina-a4-pdf {
+  width: 210mm;
+  max-height: 1100px;
+  background: white;
+  position: relative;
+  margin: 0 auto;
+  direction: ltr !important;
+}
+
+/* Garantir que o conteúdo seja visível */
+.pagina-a4-pdf div {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Garantir que as imagens sejam carregadas */
+.pagina-a4-pdf img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Forçar cores e visibilidade */
+.pagina-a4-pdf * {
+  color: #000000 !important;
+  background: transparent !important;
+}

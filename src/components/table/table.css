@@ -1,0 +1,8 @@
+/* Adicione no seu CSS */
+.row-vendido-descarte-manutencao {
+  background-color: #ffebee !important;
+}
+
+.row-vendido-descarte-manutencao:hover {
+  background-color: #ffcdd2 !important;
+}

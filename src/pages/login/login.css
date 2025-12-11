@@ -1,0 +1,18 @@
+.login-container {
+  position: relative;
+  background: linear-gradient(270deg, #a5a5a5, #e2e2e2, #7c7c7c);
+  background-size: 600% 600%;
+  animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
