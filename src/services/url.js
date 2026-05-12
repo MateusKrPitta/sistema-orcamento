@@ -5,9 +5,6 @@ const API_URL = "https://api-orcamento-production.up.railway.app";
 const httpsInstance = () => {
   const httpsAuthenticated = axios.create({
     baseURL: API_URL,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
   });
 
   httpsAuthenticated.interceptors.request.use(
