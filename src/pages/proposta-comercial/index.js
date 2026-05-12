@@ -39,6 +39,7 @@ import { buscarCartegoria } from "../../services/get/categoria";
 const PropostaComercial = () => {
   const [editar, setEditar] = useState(false);
   const [filtro, setFiltro] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [propostaEditando, setPropostaEditando] = useState(null);
   const [clientesDisponiveis, setClientesDisponiveis] = useState([]);
   const [categorias, setCategorias] = useState([]);
