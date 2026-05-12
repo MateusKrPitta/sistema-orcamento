@@ -144,13 +144,13 @@ const EditarPropostaComercial = ({
         }
       }
     }
-  }, [paginaAtual, paginas.length]);
+  }, [paginaAtual, paginas]);
 
   useEffect(() => {
     if (paginas.length > 0) {
       focusEditor();
     }
-  }, []);
+  }, [paginas.length]);
 
   const carregarTodosDados = async () => {
     setLoadingDados(true);

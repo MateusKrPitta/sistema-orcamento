@@ -30,7 +30,6 @@ export const atualizarProposta = async (id, dadosProposta) => {
 
     if (error.response) {
       const data = error.response.data;
-      const status = error.response.status;
 
       const message =
         data?.error?.message || data?.message || "Ocorreu um erro inesperado.";

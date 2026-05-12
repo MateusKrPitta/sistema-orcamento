@@ -39,8 +39,6 @@ import { buscarCartegoria } from "../../services/get/categoria";
 const PropostaComercial = () => {
   const [editar, setEditar] = useState(false);
   const [filtro, setFiltro] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [deletando, setDeletando] = useState(null);
   const [propostaEditando, setPropostaEditando] = useState(null);
   const [clientesDisponiveis, setClientesDisponiveis] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -159,7 +157,7 @@ const PropostaComercial = () => {
         setLoading(false);
       }
     },
-    [filtros],
+    [filtros]
   );
 
   useEffect(() => {
@@ -185,7 +183,7 @@ const PropostaComercial = () => {
       };
       carregarDadosFiltros();
     }
-  }, [filtro]);
+  }, [filtro, carregarClientes, carregarResponsaveis]);
 
   const aplicarFiltros = () => {
     setFiltro(false);
@@ -272,7 +270,6 @@ const PropostaComercial = () => {
   };
 
   const handleDeletar = async (row) => {
-    setDeletando(row.id);
     try {
       await deletarPropostaId(row.id);
       carregarPropostas(1, limitePorPagina);

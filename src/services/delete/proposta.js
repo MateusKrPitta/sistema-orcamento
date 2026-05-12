@@ -45,21 +45,19 @@ export const deletarPropostaId = async (id) => {
         CustomToast({ type: "error", message });
       }
 
-      throw {
-        success: false,
-        message,
-        data: error.response.data,
-      };
+      const customError = new Error(message);
+      customError.success = false;
+      customError.data = error.response.data;
+      throw customError;
     } else {
       CustomToast({
         type: "error",
         message: "Erro ao conectar ao servidor. Tente novamente.",
       });
 
-      throw {
-        success: false,
-        message: "Erro ao conectar ao servidor. Tente novamente.",
-      };
+      const connectionError = new Error("Erro ao conectar ao servidor. Tente novamente.");
+      connectionError.success = false;
+      throw connectionError;
     }
   }
 };
