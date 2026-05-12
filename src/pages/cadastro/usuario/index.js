@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Navbar from "../../../components/navbars/header";
 import MenuMobile from "../../../components/menu-mobile";
 import HeaderPerfil from "../../../components/navbars/perfil";
@@ -14,7 +14,6 @@ import {
   Person,
   Save,
   Search,
-  SensorsSharp,
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
@@ -24,89 +23,35 @@ import TableComponent from "../../../components/table";
 import { headerUsuario } from "../../../entities/headers/header-usuario";
 import { cadastrosUsuarios } from "../../../entities/class/usuario";
 import ModalLateral from "../../../components/modal-lateral";
+import { buscarUsuarios } from "../../../services/get/usuarios";
+import { criarUsuario } from "../../../services/post/usuario";
+import { editarUsuario } from "../../../services/put/usuario";
 
 const Usuario = () => {
   const [editar, setEditar] = useState(false);
   const [cadastro, setCadastro] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loadingBusca, setLoadingBusca] = useState(false);
+  const [usuarios, setUsuarios] = useState([]);
+  const [termoBusca, setTermoBusca] = useState("");
+  const [buscaLoading, setBuscaLoading] = useState(false);
 
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const [password, setPassword] = useState("");
 
-  const usuarios = [
-    {
-      id: 1,
-      nome: "João Silva",
-      email: "joao.silva@email.com",
-      ativo: true,
-      senha: "senha123",
-    },
-    {
-      id: 2,
-      nome: "Maria Santos",
-      email: "maria.santos@email.com",
-      ativo: true,
-      senha: "senha456",
-    },
-    {
-      id: 3,
-      nome: "Carlos Oliveira",
-      email: "carlos.oliveira@email.com",
-      ativo: false,
-      senha: "senha789",
-    },
-    {
-      id: 4,
-      nome: "Ana Costa",
-      email: "ana.costa@email.com",
-      ativo: true,
-      senha: "senha101",
-    },
-    {
-      id: 5,
-      nome: "Pedro Almeida",
-      email: "pedro.almeida@email.com",
-      ativo: true,
-      senha: "senha202",
-    },
-    {
-      id: 6,
-      nome: "Juliana Pereira",
-      email: "juliana.pereira@email.com",
-      ativo: false,
-      senha: "senha303",
-    },
-    {
-      id: 7,
-      nome: "Ricardo Souza",
-      email: "ricardo.souza@email.com",
-      ativo: true,
-      senha: "senha404",
-    },
-    {
-      id: 8,
-      nome: "Fernanda Lima",
-      email: "fernanda.lima@email.com",
-      ativo: true,
-      senha: "senha505",
-    },
-    {
-      id: 9,
-      nome: "Roberto Martins",
-      email: "roberto.martins@email.com",
-      ativo: true,
-      senha: "senha606",
-    },
-    {
-      id: 10,
-      nome: "Patrícia Rocha",
-      email: "patricia.rocha@email.com",
-      ativo: false,
-      senha: "senha707",
-    },
-  ];
+  const usuariosFiltrados = useMemo(() => {
+    if (!termoBusca.trim()) return usuarios;
+
+    const termo = termoBusca.toLowerCase().trim();
+    return usuarios.filter(
+      (usuario) =>
+        usuario.nome.toLowerCase().includes(termo) ||
+        usuario.email.toLowerCase().includes(termo)
+    );
+  }, [usuarios, termoBusca]);
 
   const ModalCadastro = () => {
     setCadastro(true);
@@ -114,14 +59,24 @@ const Usuario = () => {
 
   const ModalFecha = () => {
     setCadastro(false);
+    setNome("");
+    setPassword("");
+    setEmail("");
   };
 
-  const ModalEditar = () => {
+  const ModalEditar = (usuario) => {
+    setUsuarioEditando(usuario);
+    setNome(usuario.nome);
+    setPassword(usuario.password || "");
+    setEmail(usuario.email);
     setEditar(true);
   };
 
   const ModalEditarFecha = () => {
     setEditar(false);
+    setNome("");
+    setPassword("");
+    setEmail("");
   };
 
   const handleClickShowPassword = () => {
@@ -136,9 +91,72 @@ const Usuario = () => {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
   };
+
+  const ListaUsuarios = async () => {
+    setLoadingBusca(true);
+    try {
+      const response = await buscarUsuarios();
+      setUsuarios(response.data || []);
+    } catch (error) {
+      console.error("Erro inesperado ao buscar usuários:", error);
+    } finally {
+      setLoadingBusca(false);
+    }
+  };
+
+  const CadastrarUsuario = async () => {
+    setLoading(true);
+    try {
+      const resultado = await criarUsuario(nome, email, password);
+
+      if (resultado && resultado.message) {
+        ListaUsuarios();
+        ModalFecha();
+        setTermoBusca("");
+      } else {
+        console.error("Erro ao cadastrar usuário:", resultado?.error);
+      }
+    } catch (error) {
+      console.error("Erro inesperado:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const EditarUsuario = async () => {
+    setLoading(true);
+    try {
+      const resultado = await editarUsuario(
+        usuarioEditando.id,
+        nome,
+        password,
+        email
+      );
+
+      if (resultado && resultado.success) {
+        ListaUsuarios();
+        ModalEditarFecha();
+        setUsuarioEditando(null);
+        setTermoBusca("");
+      }
+    } catch (error) {
+      console.error("Erro inesperado:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuscaChange = (e) => {
+    const valor = e.target.value;
+    setTermoBusca(valor);
+  };
+
+  useEffect(() => {
+    ListaUsuarios();
+  }, []);
+
   return (
     <div className="w-full flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Navbar />
       <div className="flex flex-col w-full ml-0 lg:ml-[200px]">
         <div className="sticky top-0 z-40 bg-white shadow-sm">
@@ -169,6 +187,8 @@ const Usuario = () => {
                     size="small"
                     label="Buscar usuário"
                     autoComplete="off"
+                    value={termoBusca}
+                    onChange={handleBuscaChange}
                     sx={{
                       width: { xs: "72%", sm: "50%", md: "40%", lg: "40%" },
                     }}
@@ -189,11 +209,11 @@ const Usuario = () => {
                     onClick={ModalCadastro}
                   />
                 </div>
-                <div>
+                <div className="mt-2">
                   <TableComponent
                     showPagination={false}
                     headers={headerUsuario}
-                    rows={cadastrosUsuarios(usuarios)}
+                    rows={cadastrosUsuarios(usuariosFiltrados)}
                     actionCalls={{
                       edit: ModalEditar,
                     }}
@@ -257,8 +277,8 @@ const Usuario = () => {
                 size="small"
                 label="Senha*"
                 type={showPassword ? "text" : "password"}
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 sx={{ width: { xs: "95%", sm: "95%", md: "40%", lg: "100%" } }}
                 autoComplete="off"
                 InputProps={{
@@ -287,9 +307,12 @@ const Usuario = () => {
                 <ButtonComponent
                   title={"Cadastrar"}
                   loading={loading}
-                  disabled={!nome.trim() || !email.trim() || !senha.trim()}
+                  disabled={
+                    !nome?.trim() || !email?.trim() || !password?.trim()
+                  }
                   subtitle={"Cadastrar"}
                   startIcon={<Save />}
+                  onClick={CadastrarUsuario}
                 />
               </div>
             </div>
@@ -347,10 +370,10 @@ const Usuario = () => {
                   fullWidth
                   variant="outlined"
                   size="small"
-                  label="Senha*"
+                  label="password*"
                   type={showPassword ? "text" : "password"}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   sx={{
                     width: { xs: "95%", sm: "95%", md: "40%", lg: "100%" },
                   }}
@@ -381,8 +404,11 @@ const Usuario = () => {
                   <ButtonComponent
                     title={"Salvar"}
                     loading={loading}
-                    disabled={!nome.trim() || !email.trim() || !senha.trim()}
+                    disabled={
+                      !nome?.trim() || !email?.trim() || !password?.trim()
+                    }
                     subtitle={"Cadastrar"}
+                    onClick={EditarUsuario}
                     startIcon={<Save />}
                   />
                 </div>

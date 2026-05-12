@@ -20,7 +20,7 @@ import { maskCPF } from "../../utils/formatCPF";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditIcon from "@mui/icons-material/Edit";
-import { Print, SwapHoriz } from "@mui/icons-material";
+import { ContentCopy, Print, SwapHoriz } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import "./table.css";
 
@@ -71,13 +71,14 @@ const TableComponent = ({
 
   const handleChangePage = (event, newPage) => {
     if (onMudarPagina) {
-      onMudarPagina(event, newPage);
+      onMudarPagina(newPage);
     }
   };
 
   const handleChangeRowsPerPage = (event) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
     if (onMudarLimitePorPagina) {
-      onMudarLimitePorPagina(event);
+      onMudarLimitePorPagina(newRowsPerPage, 0);
     }
   };
 
@@ -109,7 +110,7 @@ const TableComponent = ({
     } else if (selectedIndex > 0) {
       newSelected = newSelected.concat(
         selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1)
+        selected.slice(selectedIndex + 1),
       );
     }
 
@@ -164,12 +165,30 @@ const TableComponent = ({
           <VisibilityOutlinedIcon fontSize={"small"} />
         </IconButton>
       ),
+      duplicate: (
+        <IconButton
+          onClick={() => actionCalls.duplicate(row)}
+          title="Duplicar Proposta"
+          className="duplicate-button"
+          sx={{
+            color: "#a3cb39",
+            border: "1px solid #a3cb39",
+            "&:hover": {
+              color: "#fff",
+              backgroundColor: "#a3cb39",
+              border: "1px solid #a3cb39",
+            },
+          }}
+        >
+          <ContentCopy fontSize={"small"} />
+        </IconButton>
+      ),
       print: (
         <IconButton
-          onClick={() => actionCalls.view(row)}
+          onClick={() => actionCalls.print(row)}
           title="Imprimir"
-          className="view-button"
-          id={`view-button-${row.id}`}
+          className="print-button"
+          id={`print-button-${row.id}`}
           sx={{
             color: "#a3cb39",
             border: "1px solid #a3cb39",
@@ -189,10 +208,9 @@ const TableComponent = ({
           onClick={() => actionCalls.edit(row)}
           title="Editar Dados"
           className="view-button"
-          disabled={!row.ativo}
           sx={{
-            color: !row.ativo ? "#ccc" : "#a3cb39",
-            border: `1px solid ${!row.ativo ? "#ccc" : "#a3cb39"}`,
+            color: !row.ativo ? "#a3cb39" : "#a3cb39",
+            border: `1px solid ${!row.ativo ? "#a3cb39" : "#a3cb39"}`,
             "&:hover": !row.ativo
               ? {}
               : {
@@ -201,8 +219,8 @@ const TableComponent = ({
                   border: "1px solid #005a2a",
                 },
             "&.Mui-disabled": {
-              color: "#ccc",
-              border: "1px solid #ccc",
+              color: "#a3cb39",
+              border: "1px solid #a3cb39",
             },
           }}
         >
@@ -377,7 +395,7 @@ const TableComponent = ({
                         label
                       )}
                     </TableCell>
-                  )
+                  ),
               )}
             </TableRow>
           </TableHead>
@@ -414,8 +432,8 @@ const TableComponent = ({
                               row.Tipo === "Entrada"
                                 ? "#a3cb39"
                                 : row.Tipo === "Saída"
-                                ? "#ed4949"
-                                : "transparent",
+                                  ? "#ed4949"
+                                  : "transparent",
                             color: "white",
                             fontSize: "12px",
                           }}
@@ -454,7 +472,7 @@ const TableComponent = ({
                         >
                           {row[key] || "-"}
                         </TableCell>
-                      ))
+                      )),
                   )}
                 </TableRow>
               );

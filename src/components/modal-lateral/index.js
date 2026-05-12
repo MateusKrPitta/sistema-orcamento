@@ -96,12 +96,10 @@ export default function ModalLateral({
 
                   <Lines
                     overflowY={"scroll"}
-                    maxHeight={"500px"}
                     alignItems={"start"}
                     width={"100%"}
                     border={"1px solid #d9d9d9"}
                     borderRadius={"10px"}
-                    height={"480px"}
                     padding={"10px"}
                     conteudo={<>{conteudo}</>}
                   />

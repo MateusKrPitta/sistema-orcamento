@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../../components/navbars/header";
 import MenuMobile from "../../components/menu-mobile";
 import HeaderPerfil from "../../components/navbars/perfil";
@@ -12,6 +12,9 @@ import {
   TrendingUp,
   ArrowDropDown,
   ArrowDropUp,
+  PendingActions,
+  CheckCircleOutline,
+  Cancel,
 } from "@mui/icons-material";
 import {
   LineChart,
@@ -23,7 +26,12 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
+import CustomToast from "../../components/toast";
+import { buscarInformacoesOrcamento } from "../../services/get/informacoes-orcamentos";
 
 const Dashboard = () => {
   const fadeIn = {
@@ -31,72 +39,116 @@ const Dashboard = () => {
     visible: { opacity: 1 },
   };
 
-  // Dados para o gráfico de orçamentos por mês
-  const [budgetData, setBudgetData] = useState([
-    { month: "Jan", orcamentos: 12 },
-    { month: "Fev", orcamentos: 20 },
-    { month: "Mar", orcamentos: 15 },
-    { month: "Abr", orcamentos: 18 },
-    { month: "Mai", orcamentos: 22 },
-    { month: "Jun", orcamentos: 19 },
-  ]);
-
-  // Dados para o gráfico de barras
-  const [revenueData, setRevenueData] = useState([
-    { category: "Produtos", value: 4500 },
-    { category: "Serviços", value: 3200 },
-    { category: "Consultoria", value: 2800 },
-    { category: "Manutenção", value: 1900 },
-  ]);
-
-  // Métricas principais
   const [metrics, setMetrics] = useState({
-    quantidadeGrande: 52,
-    valorTotal: 1780,
-    quantidadeAprovada: 10,
-    volumeTotal: 400,
-    orcamentosRealizados: 95,
+    quantidadeGrande: 0,
+    valorTotal: 0,
+    quantidadeAprovada: 0,
+    volumeTotal: 0,
+    orcamentosRealizados: 0,
   });
 
-  // Estado para acompanhar mês selecionado
-  const [selectedMonth, setSelectedMonth] = useState("Fevereiro");
+  const [statusData, setStatusData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const menuItems = [
-    { name: "Dashboard", icon: <DashboardIcon />, active: true },
-    { name: "Orçamentos", icon: <AttachMoney /> },
-    { name: "Proposta Comercial", icon: <Description /> },
-    { name: "Cadastro", icon: <Person /> },
-  ];
-
-  // Função para mudar o mês no gráfico
-  const handleMonthChange = (direction) => {
-    const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho"];
-    const currentIndex = months.indexOf(selectedMonth);
-    let newIndex;
-
-    if (direction === "next") {
-      newIndex = currentIndex < months.length - 1 ? currentIndex + 1 : 0;
-    } else {
-      newIndex = currentIndex > 0 ? currentIndex - 1 : months.length - 1;
-    }
-
-    setSelectedMonth(months[newIndex]);
+  const STATUS_COLORS = {
+    pendente_ligacao: "#FFA726",
+    em_andamento: "#42A5F5",
+    venda_concluida: "#66BB6A",
+    cancelado: "#EF5350",
   };
+
+  const STATUS_LABELS = {
+    pendente_ligacao: "Pendente Ligação",
+    em_andamento: "Em Andamento",
+    venda_concluida: "Venda Concluída",
+    cancelado: "Cancelado",
+  };
+
+  const transformStatusData = (porStatus) => {
+    return Object.keys(porStatus).map((status) => ({
+      name: STATUS_LABELS[status] || status,
+      value: porStatus[status],
+      color: STATUS_COLORS[status] || "#8884d8",
+    }));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await buscarInformacoesOrcamento();
+
+        if (response.success && response.data) {
+          const data = response.data;
+
+          setMetrics({
+            quantidadeGrande: data.total_ativos || 0,
+            valorTotal: data.valor_total || 0,
+            quantidadeAprovada: data.por_status?.venda_concluida || 0,
+            volumeTotal: data.valor_total || 0,
+            orcamentosRealizados: data.total_geral || 0,
+          });
+
+          if (data.por_status) {
+            const transformedData = transformStatusData(data.por_status);
+            setStatusData(transformedData);
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados do dashboard:", error);
+        CustomToast({
+          type: "error",
+          message: "Erro ao carregar dados do dashboard",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const calculateApprovalRate = () => {
+    const total = metrics.orcamentosRealizados;
+    const approved = metrics.quantidadeAprovada;
+    return total > 0 ? ((approved / total) * 100).toFixed(1) : 0;
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full flex min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex flex-col w-full ml-0 lg:ml-[200px]">
+          <div className="sticky top-0 z-40 bg-white shadow-sm">
+            <MenuMobile />
+            <HeaderPerfil />
+          </div>
+          <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Navbar />
 
-      {/* Conteúdo principal */}
       <div className="flex flex-col w-full ml-0 lg:ml-[200px]">
-        {/* Header fixo com Menu Mobile e Perfil */}
         <div className="sticky top-0 z-40 bg-white shadow-sm">
           <MenuMobile />
           <HeaderPerfil />
         </div>
 
-        {/* Conteúdo da página com padding */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -104,7 +156,6 @@ const Dashboard = () => {
           transition={{ duration: 0.5 }}
           className="w-full p-4 lg:p-6"
         >
-          {/* Cabeçalho */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 lg:mb-8 mt-4 lg:mt-2">
             <h1 className="text-primary font-bold text-2xl flex gap-2 items-center">
               <DashboardIcon className="text-primary" />
@@ -112,30 +163,27 @@ const Dashboard = () => {
             </h1>
           </div>
 
+          {/* Cards Principais */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Quantidade Grande */}
+            {/* Total Ativos */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-blue-500"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-gray-600 text-xsm font-medium">
-                  Quantidade Grande
+                <h3 className="text-gray-600 text-sm font-medium">
+                  Orçamentos Ativos
                 </h3>
-                <TrendingUp className="text-green-500" />
+                <TrendingUp className="text-blue-500" />
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="text-2xl font-bold text-gray-800">
                     {metrics.quantidadeGrande}
                   </p>
                   <p className="text-gray-500 text-sm mt-2">
-                    +12% vs mês anterior
+                    Total de orçamentos em aberto
                   </p>
-                </div>
-                <div className="flex items-center text-green-500">
-                  <ArrowDropUp />
-                  <span>5.2%</span>
                 </div>
               </div>
             </motion.div>
@@ -146,138 +194,145 @@ const Dashboard = () => {
               className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-green-500"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-gray-600 font-medium">Valor Total</h3>
+                <h3 className="text-gray-600 font-medium">Valor Total Geral</h3>
                 <AttachMoney className="text-green-500" />
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-xl font-bold text-gray-800">
-                    R${" "}
-                    {metrics.valorTotal.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
+                  <p className="text-2xl font-bold text-gray-800">
+                    {formatCurrency(metrics.valorTotal)}
                   </p>
-                  <p className="text-gray-500 text-sm mt-2">Total acumulado</p>
-                </div>
-                <div className="flex items-center text-green-500">
-                  <ArrowDropUp />
-                  <span>8.1%</span>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Soma de todos os orçamentos
+                  </p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Quantidade Aprovada */}
+            {/* Vendas Concluídas */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-purple-500"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-gray-600 font-medium">
-                  Quantidade Aprovada
-                </h3>
+                <h3 className="text-gray-600 font-medium">Vendas Concluídas</h3>
                 <CheckCircle className="text-purple-500" />
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-xl font-bold text-gray-800">
+                  <p className="text-2xl font-bold text-gray-800">
                     {metrics.quantidadeAprovada}
                   </p>
                   <p className="text-gray-500 text-sm mt-2">
-                    Taxa de aprovação: 85%
+                    Taxa de aprovação: {calculateApprovalRate()}%
                   </p>
-                </div>
-                <div className="flex items-center text-green-500">
-                  <ArrowDropUp />
-                  <span>3.4%</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* Volume Total */}
+            {/* Total Geral */}
             <motion.div
               whileHover={{ scale: 1.02 }}
               className="bg-white p-4 rounded-xl shadow-lg border-l-4 border-orange-500"
             >
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-gray-600 font-medium">Volume Total</h3>
-                <TrendingUp className="text-orange-500" />
+                <h3 className="text-gray-600 font-medium">
+                  Total de Orçamentos
+                </h3>
+                <Description className="text-orange-500" />
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-xl font-bold text-gray-800">
-                    R${" "}
-                    {metrics.volumeTotal.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                    })}
+                  <p className="text-2xl font-bold text-gray-800">
+                    {metrics.orcamentosRealizados}
                   </p>
-                  <p className="text-gray-500 text-sm mt-2">Volume aprovado</p>
-                </div>
-                <div className="flex items-center text-red-500">
-                  <ArrowDropDown />
-                  <span>2.1%</span>
+                  <p className="text-gray-500 text-sm mt-2">
+                    Todos os orçamentos criados
+                  </p>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Gráficos e informações adicionais */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Gráfico de orçamentos por mês */}
+            {/* Gráfico de Pizza - Status dos Orçamentos */}
             <div className="bg-white p-6 rounded-xl shadow-lg">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Orçamentos Realizados por Mês
-                </h2>
-              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-6">
+                Distribuição por Status
+              </h2>
               <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={budgetData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value) => [
-                        `${value} orçamentos`,
-                        "Quantidade",
-                      ]}
-                      labelStyle={{ color: "#5f7527" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="orcamentos"
-                      stroke="#a3cb39"
-                      strokeWidth={3}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                {statusData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={statusData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry) =>
+                          `${(entry.percent * 100).toFixed(0)}%`
+                        }
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {statusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => [
+                          `${value} orçamentos`,
+                          "Quantidade",
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Nenhum dado disponível</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Gráfico de distribuição de receita */}
+            {/* Legenda dos Status */}
             <div className="bg-white p-6 rounded-xl shadow-lg">
               <h2 className="text-xl font-bold text-gray-800 mb-6">
-                Distribuição por categoria
+                Detalhamento por Status
               </h2>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="category" />
-                    <YAxis />
-                    <Tooltip
-                      formatter={(value) => [
-                        `R$ ${value.toLocaleString("pt-BR", {
-                          minimumFractionDigits: 2,
-                        })}`,
-                        "Valor",
-                      ]}
-                      labelStyle={{ color: "#5f7527" }}
-                    />
-                    <Bar dataKey="value" fill="#a3cb39" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="space-y-4">
+                {statusData.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-gray-800">
+                        {item.value}
+                      </span>
+                      <span className="text-gray-500 text-sm">
+                        (
+                        {(
+                          (item.value / metrics.orcamentosRealizados) *
+                          100
+                        ).toFixed(1)}
+                        %)
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

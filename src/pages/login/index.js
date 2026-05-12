@@ -18,7 +18,10 @@ import { useNavigate } from "react-router-dom";
 import packageJson from "../../../package.json";
 import Computadores from "../../assets/png/computador.png";
 import LogoOficial from "../../assets/png/logo.png";
+
 import "./login.css";
+import { login } from "../../services/post/login";
+import CustomToast from "../../components/toast";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -27,196 +30,240 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = () => {
-    // Simulando um login (substitua com sua lógica real)
+  const saveToCookies = (userData, token) => {
+    document.cookie = `auth_token=${token}; path=/; max-age=${24 * 60 * 60}`;
+
+    document.cookie = `user_id=${userData.id}; path=/; max-age=${24 * 60 * 60}`;
+    document.cookie = `user_name=${encodeURIComponent(
+      userData.nome
+    )}; path=/; max-age=${24 * 60 * 60}`;
+    document.cookie = `user_email=${encodeURIComponent(
+      userData.email
+    )}; path=/; max-age=${24 * 60 * 60}`;
+
+    document.cookie = `user_data=${encodeURIComponent(
+      JSON.stringify(userData)
+    )}; path=/; max-age=${24 * 60 * 60}`;
+  };
+
+  const handleLogin = async () => {
     setLoading(true);
 
-    // Simula uma requisição de API
-    setTimeout(() => {
-      // Aqui você faria a validação do login
-      // Se login for bem-sucedido:
-      navigate("/dashboard");
+    try {
+      const response = await login(email, senha);
+
+      if (response.success === false) {
+        CustomToast({
+          type: "error",
+          message: "Verifique o seu email ou senha e tente novamente!",
+        });
+      } else {
+        saveToCookies(response.data.user, response.data.token);
+
+        setTimeout(() => {
+          CustomToast({
+            type: "success",
+            message: "Seja bem vindo ao sistema!",
+          });
+          navigate("/dashboard");
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Erro no login:", error);
+      CustomToast({
+        type: "error",
+        message: "Erro ao realizar login. Tente novamente!",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !loading) {
       handleLogin();
     }
   };
 
   return (
-    <Box
-      className="login-container"
-      sx={{
-        height: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          "linear-gradient(135deg, #a3cb39 0%, #7fa52c 50%, #5f7527 100%)",
-        backgroundSize: "400% 400%",
-        animation: "gradient 15s ease infinite",
-      }}
-      onKeyPress={handleKeyPress}
-    >
-      <Paper
-        elevation={10}
+    <>
+      <Box
+        className="login-container"
         sx={{
-          p: 4,
-          borderRadius: 3,
-          width: "60%",
-          maxWidth: 400,
+          height: "100vh",
           display: "flex",
-          gap: "20px",
-          flexDirection: "column",
-          bgcolor: "white",
-          textAlign: "center",
-          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+          alignItems: "center",
+          justifyContent: "center",
+          background:
+            "linear-gradient(135deg, #a3cb39 0%, #7fa52c 50%, #5f7527 100%)",
+          backgroundSize: "400% 400%",
+          animation: "gradient 15s ease infinite",
         }}
+        onKeyDown={handleKeyPress}
       >
-        <Box
+        <Paper
+          elevation={10}
           sx={{
-            mb: 2,
-            width: "100%",
+            p: 4,
+            borderRadius: 3,
+            width: "60%",
+            maxWidth: 400,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            gap: "20px",
+            flexDirection: "column",
+            bgcolor: "white",
+            textAlign: "center",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
           }}
         >
-          <div
-            style={{
-              width: "30%",
+          <Box
+            sx={{
+              mb: 2,
+              width: "100%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <img
-              src={LogoOficial}
-              alt="Logo"
+            <div
               style={{
-                width: "100%",
-                padding: "10px",
+                width: "30%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
-          </div>
-        </Box>
+            >
+              <img
+                src={LogoOficial}
+                alt="Logo"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                }}
+              />
+            </div>
+          </Box>
 
-        <label className="text-sm text-black">
-          Faça login para acessar o sistema
-        </label>
+          <label className="text-sm text-black">
+            Faça login para acessar o sistema
+          </label>
 
-        <TextField
-          fullWidth
-          label="E-mail"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          size="small"
-          variant="outlined"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Mail fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-        />
+          <TextField
+            fullWidth
+            label="E-mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            size="small"
+            variant="outlined"
+            disabled={loading}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Mail fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        <TextField
-          fullWidth
-          label="Senha"
-          type={showPassword ? "text" : "password"}
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          size="small"
-          variant="outlined"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? (
-                    <VisibilityOffOutlined fontSize="small" />
-                  ) : (
-                    <VisibilityOutlined fontSize="small" />
-                  )}
-                </IconButton>
-              </InputAdornment>
-            ),
-            startAdornment: (
-              <InputAdornment position="start">
-                <Password fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-        />
+          <TextField
+            fullWidth
+            label="Senha"
+            type={showPassword ? "text" : "password"}
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            size="small"
+            variant="outlined"
+            disabled={loading}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <VisibilityOffOutlined fontSize="small" />
+                    ) : (
+                      <VisibilityOutlined fontSize="small" />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Password fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        <Button
-          fullWidth
-          onClick={handleLogin}
-          variant="contained"
-          disabled={loading}
+          <Button
+            fullWidth
+            onClick={handleLogin}
+            variant="contained"
+            disabled={loading}
+            sx={{
+              py: 1.5,
+              mt: 1,
+              mb: 2,
+              background: "linear-gradient(135deg, #a3cb39 0%, #5f7527 100%)",
+              fontWeight: "600",
+              fontSize: "16px",
+              borderRadius: "8px",
+              boxShadow: "0 4px 8px rgba(163, 203, 57, 0.3)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #5f7527 0%, #a3cb39 100%)",
+                boxShadow: "0 6px 12px rgba(163, 203, 57, 0.4)",
+              },
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Entrar"
+            )}
+          </Button>
+
+          <label
+            className="text-xs mt-4 font-medium"
+            style={{ color: "#718096" }}
+          >
+            Versão {packageJson.version}
+          </label>
+        </Paper>
+        <Paper
           sx={{
-            py: 1.5,
-            mt: 1,
-            mb: 2,
-            background: "linear-gradient(135deg, #a3cb39 0%, #5f7527 100%)",
-            fontWeight: "600",
-            fontSize: "16px",
-            borderRadius: "8px",
-            boxShadow: "0 4px 8px rgba(163, 203, 57, 0.3)",
-            "&:hover": {
-              background: "linear-gradient(135deg, #5f7527 0%, #a3cb39 100%)",
-              boxShadow: "0 6px 12px rgba(163, 203, 57, 0.4)",
-            },
+            p: 4,
+            borderTopRightRadius: "10%",
+            borderBottomRightRadius: "10%",
+            width: "40%",
+            maxWidth: 400,
+            display: "flex",
+            gap: "20px",
+            flexDirection: "column",
+            bgcolor: "white",
+            textAlign: "center",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
           }}
         >
-          {loading ? <CircularProgress size={24} color="inherit" /> : "Entrar"}
-        </Button>
+          <label className="font-bold text-2xl text-primary ">
+            Sistema de Orçamentos
+          </label>
+          <img src={Computadores} alt="Computadores" />
+        </Paper>
 
-        <label
-          className="text-xs mt-4 font-medium"
-          style={{ color: "#718096" }}
-        >
-          Versão {packageJson.version}
-        </label>
-      </Paper>
-      <Paper
-        sx={{
-          p: 4,
-
-          borderTopRightRadius: "10%",
-          borderBottomRightRadius: "10%",
-          width: "40%",
-          maxWidth: 400,
-          display: "flex",
-          gap: "20px",
-          flexDirection: "column",
-          bgcolor: "white",
-          textAlign: "center",
-          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
-        }}
-      >
-        <label className="font-bold text-2xl text-primary ">
-          Sistema de Orçamentos
-        </label>
-        <img src={Computadores}></img>
-      </Paper>
-
-      <style>
-        {`
-          @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}
-      </style>
-    </Box>
+        <style>
+          {`
+            @keyframes gradient {
+              0% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+              100% { background-position: 0% 50%; }
+            }
+          `}
+        </style>
+      </Box>
+    </>
   );
 };
 

@@ -13,7 +13,6 @@ const Cadastro = () => {
   };
   return (
     <div className="w-full flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Navbar />
       <div className="flex flex-col w-full ml-0 lg:ml-[200px]">
         <div className="sticky top-0 z-40 bg-white shadow-sm">

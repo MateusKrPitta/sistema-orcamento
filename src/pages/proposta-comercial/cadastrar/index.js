@@ -1,11 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  Editor,
-  EditorState,
-  RichUtils,
-  convertToRaw,
-  Modifier,
-} from "draft-js";
+import { Editor, EditorState, RichUtils, Modifier } from "draft-js";
 import "draft-js/dist/Draft.css";
 import {
   AddCircle,
@@ -25,6 +19,11 @@ import {
   FormatListBulleted,
   FormatListNumbered,
   Article,
+  Person,
+  Category,
+  WhatsApp,
+  LocationCity,
+  Email,
 } from "@mui/icons-material";
 import ButtonComponent from "../../../components/button";
 import CentralModal from "../../../components/modal-central";
@@ -34,11 +33,6 @@ import ImagemFundo from "../../../assets/png/logo-m.png";
 import {
   IconButton,
   Paper,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -52,29 +46,58 @@ import {
   LinearProgress,
   TextField,
   InputAdornment,
+  Chip,
+  MenuItem,
+  Typography,
+  Box,
 } from "@mui/material";
 import html2pdf from "html2pdf.js";
 import "./cadastrar.css";
+import { buscarCartegoria } from "../../../services/get/categoria";
+import { buscarClientes } from "../../../services/get/cliente";
 
-const CadastroPropostaComercial = () => {
+import htmlToEditorState from "../../../utils/htmlToEditorState";
+import editorStateToHtml from "../../../utils/editorStateToHtml";
+import conteudoPredefinido from "../../../utils/conteudoPredefinido";
+import { criarProposta } from "../../../services/post/proposta";
+import CustomToast from "../../../components/toast";
+import { criarCliente } from "../../../services/post/cliente";
+
+const CadastroPropostaComercial = ({ onPropostaCriada }) => {
+  const [nome, setNome] = useState("");
+  const [cliente, setCliente] = useState("");
+  const [categoria, setCategoria] = useState("");
+  const [telefone, setTelefone] = useState("");
+  const [nomeCliente, setNomeCliente] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [status, setStatus] = useState("pendente");
+  const [observacoes, setObservacoes] = useState("");
+  const [emailCliente, setEmailCliente] = useState("");
   const [cadastro, setCadastro] = useState(false);
-  const [paginas, setPaginas] = useState([
-    {
-      id: 1,
-      titulo: "Página 1",
-      conteudo: EditorState.createEmpty(),
+  const [modoCadastroCliente, setModoCadastroCliente] = useState(false);
+  const [clientesDisponiveis, setClientesDisponiveis] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [paginas, setPaginas] = useState(() =>
+    conteudoPredefinido.map((pagina) => ({
+      ...pagina,
+      editorState: htmlToEditorState(pagina.html),
       editando: false,
-      rawContent: null,
-    },
-  ]);
+    })),
+  );
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [fontFamily, setFontFamily] = useState("Arial");
-  const [fontSize, setFontSize] = useState("14px");
+  const [fontSize, setFontSize] = useState("16px");
   const [confirmacaoExclusao, setConfirmacaoExclusao] = useState(null);
   const [currentAlignment, setCurrentAlignment] = useState("left");
   const editorRef = useRef(null);
   const MAX_CHARACTERS_PER_PAGE = 3500;
   const [characterCount, setCharacterCount] = useState(0);
+
+  const statusOptions = [
+    { value: "pendente", label: "Pendente" },
+    { value: "aprovado", label: "Aprovado" },
+    { value: "cancelado", label: "Cancelado" },
+  ];
 
   const focusEditor = () => {
     if (editorRef.current) {
@@ -84,10 +107,9 @@ const CadastroPropostaComercial = () => {
 
   useEffect(() => {
     if (paginas[paginaAtual]) {
-      const contentState = paginas[paginaAtual].conteudo.getCurrentContent();
+      const contentState = paginas[paginaAtual].editorState.getCurrentContent();
       const plainText = contentState.getPlainText();
       setCharacterCount(plainText.length);
-
       focusEditor();
       updateCurrentAlignment();
     }
@@ -95,7 +117,7 @@ const CadastroPropostaComercial = () => {
 
   const updateCurrentAlignment = () => {
     const editorState =
-      paginas[paginaAtual]?.conteudo || EditorState.createEmpty();
+      paginas[paginaAtual]?.editorState || EditorState.createEmpty();
     const selection = editorState.getSelection();
     const contentState = editorState.getCurrentContent();
 
@@ -110,117 +132,12 @@ const CadastroPropostaComercial = () => {
     setCurrentAlignment(alignment);
   };
 
-  const convertEditorStateToHTML = (editorState) => {
-    if (!editorState) return "";
-
-    const contentState = editorState.getCurrentContent();
-    const blockMap = contentState.getBlockMap();
-
-    let html = "";
-    let inList = false;
-    let listType = "";
-
-    blockMap.forEach((block) => {
-      const textAlign = block.getData().get("textAlign") || "left";
-      const blockType = block.getType();
-      const text = block.getText();
-
-      if (
-        inList &&
-        blockType !== "unordered-list-item" &&
-        blockType !== "ordered-list-item"
-      ) {
-        html += listType === "unordered" ? "</ul>" : "</ol>";
-        inList = false;
-        listType = "";
-      }
-
-      const characterList = block.getCharacterList();
-      let styledText = "";
-
-      if (characterList && text.length > 0) {
-        for (let i = 0; i < text.length; i++) {
-          const char = characterList.get(i);
-          if (!char) {
-            styledText += text[i];
-            continue;
-          }
-
-          const styles = char.getStyle();
-          let charText = text[i];
-
-          if (styles.has("UNDERLINE")) {
-            charText = `<u>${charText}</u>`;
-          }
-          if (styles.has("ITALIC")) {
-            charText = `<em>${charText}</em>`;
-          }
-          if (styles.has("BOLD")) {
-            charText = `<strong>${charText}</strong>`;
-          }
-
-          styledText += charText;
-        }
-      } else {
-        styledText = text;
-      }
-
-      if (styledText.trim() === "") {
-        styledText = "<br>";
-      }
-
-      const styleAttr = `style="text-align: ${textAlign} !important; direction: ltr !important; margin: 4px 0 !important; padding: 0 !important; line-height: 1.4;"`;
-
-      switch (blockType) {
-        case "header-one":
-          html += `<h1 ${styleAttr} style="font-size: 2em !important; font-weight: bold !important; margin: 12px 0 8px 0 !important;">${styledText}</h1>`;
-          break;
-
-        case "header-two":
-          html += `<h2 ${styleAttr} style="font-size: 1.5em !important; font-weight: bold !important; margin: 10px 0 6px 0 !important;">${styledText}</h2>`;
-          break;
-
-        case "header-three":
-          html += `<h3 ${styleAttr} style="font-size: 1.17em !important; font-weight: bold !important; margin: 8px 0 4px 0 !important;">${styledText}</h3>`;
-          break;
-
-        case "unordered-list-item":
-          if (!inList) {
-            html += `<ul style="text-align: ${textAlign} !important; margin: 8px 0 !important; padding-left: 24px !important; direction: ltr !important;">`;
-            inList = true;
-            listType = "unordered";
-          }
-          html += `<li style="text-align: ${textAlign} !important; direction: ltr !important; margin: 2px 0 !important; line-height: 1.4;">${styledText}</li>`;
-          break;
-
-        case "ordered-list-item":
-          if (!inList) {
-            html += `<ol style="text-align: ${textAlign} !important; margin: 8px 0 !important; padding-left: 24px !important; direction: ltr !important;">`;
-            inList = true;
-            listType = "ordered";
-          }
-          html += `<li style="text-align: ${textAlign} !important; direction: ltr !important; margin: 2px 0 !important; line-height: 1.4;">${styledText}</li>`;
-          break;
-
-        default:
-          html += `<div ${styleAttr}>${styledText}</div>`;
-          break;
-      }
-    });
-
-    if (inList) {
-      html += listType === "unordered" ? "</ul>" : "</ol>";
-    }
-
-    return html;
-  };
-
   const salvarConteudoPagina = (editorState) => {
     const novasPaginas = [...paginas];
     novasPaginas[paginaAtual] = {
       ...novasPaginas[paginaAtual],
-      conteudo: editorState,
-      rawContent: convertToRaw(editorState.getCurrentContent()),
+      editorState: editorState,
+      html: editorStateToHtml(editorState),
     };
     setPaginas(novasPaginas);
     updateCurrentAlignment();
@@ -231,7 +148,10 @@ const CadastroPropostaComercial = () => {
     const plainText = contentState.getPlainText();
 
     if (plainText.length + chars.length > MAX_CHARACTERS_PER_PAGE) {
-      alert(`Limite de ${MAX_CHARACTERS_PER_PAGE} caracteres atingido!`);
+      CustomToast({
+        type: "warning",
+        message: `Limite de ${MAX_CHARACTERS_PER_PAGE} caracteres atingido!`,
+      });
       return "handled";
     }
     return "not-handled";
@@ -286,21 +206,30 @@ const CadastroPropostaComercial = () => {
 
   const toggleInlineStyle = (style) => {
     const editorState =
-      paginas[paginaAtual]?.conteudo || EditorState.createEmpty();
+      paginas[paginaAtual]?.editorState || EditorState.createEmpty();
     const newState = RichUtils.toggleInlineStyle(editorState, style);
     handleEditorChange(newState);
   };
 
   const toggleBlockType = (blockType) => {
     const editorState =
-      paginas[paginaAtual]?.conteudo || EditorState.createEmpty();
+      paginas[paginaAtual]?.editorState || EditorState.createEmpty();
     const newState = RichUtils.toggleBlockType(editorState, blockType);
     handleEditorChange(newState);
   };
 
+  const getCurrentBlockType = () => {
+    const editorState =
+      paginas[paginaAtual]?.editorState || EditorState.createEmpty();
+    const selection = editorState.getSelection();
+    const contentState = editorState.getCurrentContent();
+    const block = contentState.getBlockForKey(selection.getStartKey());
+    return block.getType();
+  };
+
   const aplicarAlinhamento = (align) => {
     const editorState =
-      paginas[paginaAtual]?.conteudo || EditorState.createEmpty();
+      paginas[paginaAtual]?.editorState || EditorState.createEmpty();
     const selection = editorState.getSelection();
     const contentState = editorState.getCurrentContent();
 
@@ -312,18 +241,18 @@ const CadastroPropostaComercial = () => {
       const newContentState = Modifier.setBlockData(
         contentState,
         selection,
-        blockData
+        blockData,
       );
 
       const newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-block-data"
+        "change-block-data",
       );
 
       const finalEditorState = EditorState.forceSelection(
         newEditorState,
-        newEditorState.getSelection()
+        newEditorState.getSelection(),
       );
 
       handleEditorChange(finalEditorState);
@@ -346,7 +275,7 @@ const CadastroPropostaComercial = () => {
         newContentState = Modifier.setBlockData(
           newContentState,
           blockSelection,
-          blockData
+          blockData,
         );
 
         if (currentKey === endKey) break;
@@ -356,12 +285,12 @@ const CadastroPropostaComercial = () => {
       const newEditorState = EditorState.push(
         editorState,
         newContentState,
-        "change-block-data"
+        "change-block-data",
       );
 
       const finalEditorState = EditorState.forceSelection(
         newEditorState,
-        selection
+        selection,
       );
 
       handleEditorChange(finalEditorState);
@@ -372,7 +301,7 @@ const CadastroPropostaComercial = () => {
 
   const getCurrentInlineStyle = () => {
     const editorState =
-      paginas[paginaAtual]?.conteudo || EditorState.createEmpty();
+      paginas[paginaAtual]?.editorState || EditorState.createEmpty();
     return editorState.getCurrentInlineStyle();
   };
 
@@ -410,15 +339,150 @@ const CadastroPropostaComercial = () => {
 
   const ModalFecha = () => {
     setCadastro(false);
+    setModoCadastroCliente(false);
+  };
+
+  const cadastrarNovoCliente = async () => {
+    if (!nomeCliente || !telefone || !emailCliente || !endereco) {
+      CustomToast({
+        type: "warning",
+        message: "Por favor, preencha todos os campos do cliente!",
+      });
+      return;
+    }
+
+    try {
+      const response = await criarCliente(
+        nomeCliente,
+        telefone,
+        emailCliente,
+        endereco,
+      );
+
+      if (response.success) {
+        CustomToast({
+          type: "success",
+          message: "Cliente cadastrado com sucesso!",
+        });
+
+        await carregarClientes();
+
+        const clienteRecente = response.data || response;
+        if (clienteRecente && clienteRecente.id) {
+          setCliente(clienteRecente.id.toString());
+
+          if (clienteRecente.nome) setNomeCliente(clienteRecente.nome);
+          if (clienteRecente.telefone) setTelefone(clienteRecente.telefone);
+          if (clienteRecente.email) setEmailCliente(clienteRecente.email);
+          if (clienteRecente.endereco) setEndereco(clienteRecente.endereco);
+        }
+
+        setModoCadastroCliente(false);
+      } else {
+        CustomToast({
+          type: "error",
+          message: `Erro ao cadastrar cliente: ${response.error || "Erro desconhecido"}`,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao cadastrar cliente:", error);
+      CustomToast({
+        type: "error",
+        message: "Erro ao cadastrar cliente. Por favor, tente novamente.",
+      });
+    }
+  };
+
+  const criarPropostaComercial = async () => {
+    if (!nome || !cliente) {
+      CustomToast({
+        type: "warning",
+        message: "Por favor, preencha o nome e selecione um cliente!",
+      });
+      return;
+    }
+
+    const hasContent = paginas.some((pagina) => {
+      const contentState = pagina.editorState.getCurrentContent();
+      return contentState.hasText() || pagina.html.trim() !== "<div><br></div>";
+    });
+
+    if (!hasContent) {
+      CustomToast({
+        type: "warning",
+        message: "Adicione conteúdo antes de salvar a proposta!",
+      });
+      return;
+    }
+
+    const dadosProposta = {
+      nome: nome,
+      clienteId: parseInt(cliente),
+      categoriaId: categoria ? parseInt(categoria) : null,
+      statusProposta: status || "pendente",
+      observacoes: observacoes,
+      paginas: paginas.map((pagina) => ({
+        titulo: pagina.titulo,
+        conteudo: pagina.html,
+      })),
+    };
+
+    try {
+      const response = await criarProposta(dadosProposta);
+
+      if (response.success) {
+        CustomToast({
+          type: "success",
+          message: "Proposta criada com sucesso!",
+        });
+        if (onPropostaCriada) {
+          onPropostaCriada(1, 10);
+        }
+        ModalFecha();
+        limparFormulario();
+      } else {
+        CustomToast({
+          type: "error",
+          message: `Erro ao criar proposta: ${response.error || "Erro desconhecido"}`,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao criar proposta:", error);
+      CustomToast({
+        type: "error",
+        message: "Erro ao criar proposta. Por favor, tente novamente.",
+      });
+    }
+  };
+
+  const limparFormulario = () => {
+    setNome("");
+    setCliente("");
+    setCategoria("");
+    setStatus("pendente");
+    setObservacoes("");
+    setTelefone("");
+    setNomeCliente("");
+    setEmailCliente("");
+    setEndereco("");
+    setModoCadastroCliente(false);
+    setPaginas(() =>
+      conteudoPredefinido.map((pagina) => ({
+        ...pagina,
+        editorState: htmlToEditorState(pagina.html),
+        editando: false,
+      })),
+    );
+    setPaginaAtual(0);
   };
 
   const adicionarPagina = () => {
     const novaPagina = {
       id: Date.now(),
       titulo: `Página ${paginas.length + 1}`,
-      conteudo: EditorState.createEmpty(),
+      html: "<div><br></div>",
+      editorState: EditorState.createEmpty(),
       editando: false,
-      rawContent: null,
     };
     setPaginas([...paginas, novaPagina]);
     setPaginaAtual(paginas.length);
@@ -427,7 +491,10 @@ const CadastroPropostaComercial = () => {
 
   const removerPagina = (index) => {
     if (paginas.length <= 1) {
-      alert("Deve haver pelo menos uma página!");
+      CustomToast({
+        type: "warning",
+        message: "Deve haver pelo menos uma página!",
+      });
       return;
     }
 
@@ -438,12 +505,6 @@ const CadastroPropostaComercial = () => {
       setPaginaAtual(novasPaginas.length - 1);
     }
     setConfirmacaoExclusao(null);
-  };
-
-  const iniciarEdicaoTitulo = (index) => {
-    const novasPaginas = [...paginas];
-    novasPaginas[index] = { ...novasPaginas[index], editando: true };
-    setPaginas(novasPaginas);
   };
 
   const salvarTitulo = (index, novoTitulo) => {
@@ -464,112 +525,114 @@ const CadastroPropostaComercial = () => {
 
   const handleDownload = () => {
     const hasContent = paginas.some((pagina) => {
-      const contentState = pagina.conteudo.getCurrentContent();
-      return contentState.hasText() || contentState.getBlockMap().size > 1;
+      const contentState = pagina.editorState.getCurrentContent();
+      return contentState.hasText() || pagina.html.trim() !== "<div><br></div>";
     });
 
     if (!hasContent) {
-      alert("Adicione conteúdo antes de gerar o PDF!");
+      CustomToast({
+        type: "warning",
+        message: "Adicione conteúdo antes de gerar o PDF!",
+      });
       return;
     }
 
     const container = document.createElement("div");
     container.style.cssText = `
-    font-family: ${fontFamily};
-    font-size: ${fontSize};
-    line-height: 1.4 !important;
-    direction: ltr;
-    text-align: left;
-    margin: 0;
-    padding: 0;
-    width: 210mm;
-  `;
+      font-family: ${fontFamily};
+      font-size: ${fontSize};
+      line-height: 1.4 !important;
+      direction: ltr;
+      text-align: left;
+      margin: 0;
+      padding: 0;
+      width: 210mm;
+    `;
 
     paginas.forEach((pagina, index) => {
       const paginaDiv = document.createElement("div");
       paginaDiv.className = "pagina-a4-pdf";
       paginaDiv.style.cssText = `
-  width: 210mm !important;
-  height: 297mm !important;
-  background: white;
-  position: relative;
-  margin: 0 auto;
-  page-break-inside: avoid;
-  page-break-after: ${index < paginas.length - 1 ? "always" : "avoid"};
-  direction: ltr;
-  text-align: left;
-  overflow: hidden;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-`;
+        width: 210mm !important;
+        height: 297mm !important;
+        background: white;
+        position: relative;
+        margin: 0 auto;
+        page-break-inside: avoid;
+        page-break-after: ${index < paginas.length - 1 ? "always" : "avoid"};
+        direction: ltr;
+        text-align: left;
+        overflow: hidden;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      `;
 
       const cabecalho = document.createElement("div");
       cabecalho.innerHTML = `<img src="${ImagemCabecalho}" alt="Cabeçalho" style="width:100%; height: auto;" />`;
       cabecalho.style.cssText = `
-      width: 100%;
-      height: 60px;
-      flex-shrink: 0;
-      margin: 0;
-      padding: 0;
-    `;
+        width: 100%;
+        height: 60px;
+        flex-shrink: 0;
+        margin: 0;
+        padding: 0;
+      `;
 
       const conteudoContainer = document.createElement("div");
       conteudoContainer.style.cssText = `
-      flex: 1;
-      position: relative;
-      margin: 0;
-      padding: 15px 25px;
-      min-height: calc(297mm - 100px);
-      overflow: visible;
-      z-index: 2;
-    `;
+        flex: 1;
+        position: relative;
+        margin: 0;
+        padding: 15px 60px !important;
+        min-height: calc(297mm - 100px);
+        overflow: visible;
+        z-index: 2;
+      `;
 
       const fundo = document.createElement("div");
       fundo.innerHTML = `<img src="${ImagemFundo}" alt="Logo" style="width:50%; max-width:200px; opacity:0.15; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" />`;
       fundo.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0;
-      padding: 0;
-    `;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+      `;
 
       const conteudo = document.createElement("div");
-      const htmlContent = convertEditorStateToHTML(pagina.conteudo);
-      conteudo.innerHTML = htmlContent || '<div style="height: 20px;"></div>';
+      conteudo.innerHTML = pagina.html || '<div style="height: 20px;"></div>';
       conteudo.style.cssText = `
-      position: relative;
-      z-index: 3;
-      margin-top:70px;
-      direction: ltr;
-      text-align: left;
-      line-height: 1.4 !important;
-      font-family: ${fontFamily} !important;
-      font-size: ${fontSize} !important;
-      color: #000 !important;
-      min-height: 50px;
-    `;
+        position: relative;
+        z-index: 3;
+        margin-top: 100px !important;
+        direction: ltr;
+        text-align: left;
+        line-height: 1.4 !important;
+        font-family: ${fontFamily} !important;
+        font-size: ${fontSize} !important;
+        color: #000 !important;
+        min-height: 50px;
+        padding: 0 20px !important;
+      `;
 
       const rodape = document.createElement("div");
-      rodape.innerHTML = `<img src="${ImagemRodape}" alt="Rodapé" style="width:12%; height: auto; margin-top: -100px;"  />`;
+      rodape.innerHTML = `<img src="${ImagemRodape}" alt="Rodapé" style="width:12%; height: auto; margin-top: -100px;" />`;
       rodape.style.cssText = `
-      width: 100%;
-      height: 40px;
-      flex-shrink: 0;
-      
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    `;
+        width: 100%;
+        height: 40px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justifyContent: center;
+        padding: 0;
+      `;
 
       conteudoContainer.appendChild(fundo);
       conteudoContainer.appendChild(conteudo);
@@ -582,9 +645,7 @@ const CadastroPropostaComercial = () => {
 
     const options = {
       margin: [0, 0, 0, 0],
-      filename: `proposta-comercial-${
-        new Date().toISOString().split("T")[0]
-      }.pdf`,
+      filename: `proposta-comercial-${new Date().toISOString().split("T")[0]}.pdf`,
       html2canvas: {
         scale: 2,
         useCORS: true,
@@ -608,18 +669,27 @@ const CadastroPropostaComercial = () => {
         .from(container)
         .save()
         .then(() => {
-          console.log("PDF gerado com sucesso!");
+          CustomToast({
+            type: "success",
+            message: "PDF gerado com sucesso!",
+          });
         })
         .catch((error) => {
           console.error("Erro ao gerar PDF:", error);
-          alert("Erro ao gerar PDF. Por favor, tente novamente.");
+          CustomToast({
+            type: "error",
+            message: "Erro ao gerar PDF. Por favor, tente novamente.",
+          });
         });
     }, 1000);
   };
 
   const renderizarPrevisualizacao = () => {
     return paginas.map((pagina, index) => {
-      const htmlContent = convertEditorStateToHTML(pagina.conteudo);
+      const htmlComQuebras = pagina.html
+        .replace(/<div><br><\/div>/g, "<div><br></div>")
+        .replace(/<div><\/div>/g, "<div><br></div>")
+        .replace(/<div\s*\/?>/g, "<div>");
 
       return (
         <div
@@ -634,7 +704,7 @@ const CadastroPropostaComercial = () => {
             direction: "ltr",
           }}
         >
-          <div className="absolute top-0 left-0 w-full z-0 ">
+          <div className="absolute top-0 left-0 w-full z-0">
             <img src={ImagemCabecalho} alt="Cabeçalho" className="w-full" />
           </div>
 
@@ -644,55 +714,96 @@ const CadastroPropostaComercial = () => {
 
           <div
             className="relative z-10 pt-20 pb-20 h-full mt-4"
-            style={{ direction: "ltr" }}
+            style={{ direction: "ltr", padding: "0 40px" }}
           >
+            {/* Usar dangerouslySetInnerHTML com HTML processado */}
             <div
-              dangerouslySetInnerHTML={{
-                __html: htmlContent,
-              }}
+              dangerouslySetInnerHTML={{ __html: htmlComQuebras }}
               style={{
                 fontFamily: fontFamily,
                 fontSize: fontSize,
                 direction: "ltr",
                 id: `preview-content-${index}`,
+                marginTop: "100px",
+                whiteSpace: "pre-wrap",
+                wordWrap: "break-word",
+                lineHeight: "1.5",
               }}
             />
-          </div>
-
-          <div className="absolute bottom-0 left-0 w-full flex flex-col items-center justify-center z-0">
-            <img src={ImagemRodape} alt="Rodapé" className="w-1/5 mb-2" />
-          </div>
-
-          <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
-            {index + 1}
-          </div>
-
-          <div className="absolute top-2 left-2 flex gap-1">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                iniciarEdicaoTitulo(index);
-              }}
-              className="bg-white hover:bg-gray-100"
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmacaoExclusao(index);
-              }}
-              className="bg-white hover:bg-gray-100"
-            >
-              <Delete fontSize="small" />
-            </IconButton>
           </div>
         </div>
       );
     });
   };
+
+  useEffect(() => {
+    const paginasEmEdicao = paginas.filter(
+      (p, i) => p.editando && i !== paginaAtual,
+    );
+    if (paginasEmEdicao.length > 0) {
+      const novasPaginas = paginas.map((p, i) =>
+        p.editando && i !== paginaAtual ? { ...p, editando: false } : p,
+      );
+      setPaginas(novasPaginas);
+    }
+  }, [paginaAtual]);
+
+  const carregarClientes = async () => {
+    try {
+      const response = await buscarClientes();
+      if (response.success) {
+        const clientesArray = response.data.data || response.data || [];
+        setClientesDisponiveis(clientesArray);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+      CustomToast({
+        type: "error",
+        message: "Erro ao carregar clientes. Por favor, tente novamente.",
+      });
+    }
+  };
+
+  const buscarCategorias = async () => {
+    try {
+      const response = await buscarCartegoria();
+      if (response.success) {
+        const categoriasArray = response.data.data || response.data || [];
+        setCategorias(categoriasArray);
+      }
+    } catch (error) {
+      console.error("Erro inesperado ao buscar categorias:", error);
+      CustomToast({
+        type: "error",
+        message: "Erro ao carregar categorias. Por favor, tente novamente.",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (cadastro) {
+      carregarClientes();
+      buscarCategorias();
+    }
+  }, [cadastro]);
+  useEffect(() => {
+    if (cliente && clientesDisponiveis.length > 0) {
+      const clienteSelecionado = clientesDisponiveis.find(
+        (c) => c.id.toString() === cliente.toString(),
+      );
+      if (clienteSelecionado) {
+        setNomeCliente(clienteSelecionado.nome || "");
+        setTelefone(clienteSelecionado.telefone || "");
+        setEndereco(clienteSelecionado.endereco || "");
+      }
+    } else {
+      if (!cliente) {
+        setNomeCliente("");
+        setTelefone("");
+        setEndereco("");
+      }
+    }
+  }, [cliente, clientesDisponiveis]);
 
   return (
     <div>
@@ -717,16 +828,17 @@ const CadastroPropostaComercial = () => {
           className="flex flex-col gap-4 w-full"
           style={{ direction: "ltr" }}
         >
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center flex-wrap gap-3 mb-4 mt-2">
             <TextField
               fullWidth
               variant="outlined"
               size="small"
-              label="Nome"
+              label="Nome da Proposta"
               autoComplete="off"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
               sx={{
-                width: { xs: "72%", sm: "50%", md: "40%", lg: "40%" },
-                marginTop: "10px",
+                width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
               }}
               InputProps={{
                 startAdornment: (
@@ -736,32 +848,354 @@ const CadastroPropostaComercial = () => {
                 ),
               }}
             />
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">
-                Páginas: {paginas.length}
-              </h3>
-              <Chip
-                label={`Página ${paginaAtual + 1} de ${paginas.length}`}
-                color="primary"
+
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              label="Categoria"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              select
+              sx={{ width: { xs: "95%", sm: "95%", md: "40%", lg: "15%" } }}
+              autoComplete="off"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Category />
+                  </InputAdornment>
+                ),
+              }}
+            >
+              <MenuItem value="">
+                <em>Selecione uma categoria</em>
+              </MenuItem>
+              {categorias.map((cat) => (
+                <MenuItem key={cat.id} value={cat.id}>
+                  {cat.nome}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              label="Status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              select
+              sx={{ width: { xs: "95%", sm: "95%", md: "40%", lg: "15%" } }}
+              autoComplete="off"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Article />
+                  </InputAdornment>
+                ),
+              }}
+            >
+              {statusOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <div className="flex items-center flex-wrap gap-3 w-[100%]">
+              <div className="flex items-center justify-between w-full">
+                <label className="flex items-center gap-2 font-bold">
+                  <Person fontSize="small" style={{ color: "#a3cb39" }} />{" "}
+                  Informações do Cliente
+                </label>
+
+                {!modoCadastroCliente && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Add />}
+                    onClick={() => setModoCadastroCliente(true)}
+                    sx={{ ml: 2 }}
+                  >
+                    Novo Cliente
+                  </Button>
+                )}
+              </div>
+
+              {modoCadastroCliente ? (
+                <Box
+                  sx={{
+                    width: "100%",
+                    p: 2,
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 1,
+                  }}
+                >
+                  <label className="flex items-center gap-2 font-bold">
+                    <Person fontSize="small" style={{ color: "#a3cb39" }} />
+                    Cadastrar Novo Cliente
+                  </label>
+
+                  <div className="flex flex-wrap gap-3 w-full">
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      label="Nome do Cliente *"
+                      value={nomeCliente}
+                      onChange={(e) => setNomeCliente(e.target.value)}
+                      autoComplete="off"
+                      sx={{
+                        width: { xs: "100%", sm: "48%", md: "30%", lg: "30%" },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Person />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      label="E-mail *"
+                      value={emailCliente}
+                      onChange={(e) => setEmailCliente(e.target.value)}
+                      autoComplete="off"
+                      sx={{
+                        width: { xs: "100%", sm: "48%", md: "30%", lg: "30%" },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      value={telefone}
+                      onChange={(e) => setTelefone(e.target.value)}
+                      label="WhatsApp/Telefone *"
+                      autoComplete="off"
+                      sx={{
+                        width: { xs: "100%", sm: "48%", md: "30%", lg: "30%" },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <WhatsApp />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      value={endereco}
+                      onChange={(e) => setEndereco(e.target.value)}
+                      size="small"
+                      label="Endereço *"
+                      autoComplete="off"
+                      sx={{
+                        width: { xs: "100%", sm: "48%", md: "30%", lg: "30%" },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LocationCity />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+
+                    <div className="flex gap-2 w-full mt-2">
+                      <Button
+                        variant="contained"
+                        onClick={cadastrarNovoCliente}
+                        color="primary"
+                        startIcon={<Save />}
+                      >
+                        Salvar Cliente
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setModoCadastroCliente(false);
+                          setNomeCliente("");
+                          setEmailCliente("");
+                          setTelefone("");
+                          setEndereco("");
+                        }}
+                        color="secondary"
+                        startIcon={<Cancel />}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </Box>
+              ) : (
+                <>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    label="Cliente *"
+                    value={cliente}
+                    onChange={(e) => setCliente(e.target.value)}
+                    autoComplete="off"
+                    select
+                    sx={{
+                      width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person />
+                        </InputAdornment>
+                      ),
+                    }}
+                  >
+                    <MenuItem value="">
+                      <em>Selecione um cliente</em>
+                    </MenuItem>
+                    {clientesDisponiveis.map((cli) => (
+                      <MenuItem key={cli.id} value={cli.id}>
+                        {cli.nome}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    label="Nome do Cliente"
+                    value={nomeCliente}
+                    onChange={(e) => setNomeCliente(e.target.value)}
+                    autoComplete="off"
+                    disabled
+                    sx={{
+                      width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    label="E-mail"
+                    value={emailCliente}
+                    onChange={(e) => setEmailCliente(e.target.value)}
+                    autoComplete="off"
+                    disabled
+                    sx={{
+                      width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Email />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                    label="WhatsApp/Telefone"
+                    autoComplete="off"
+                    disabled
+                    sx={{
+                      width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <WhatsApp />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    value={endereco}
+                    onChange={(e) => setEndereco(e.target.value)}
+                    size="small"
+                    label="Endereço"
+                    autoComplete="off"
+                    disabled
+                    sx={{
+                      width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LocationCity />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </>
+              )}
+            </div>
+
+            {/* Campo de observações */}
+            <div className="flex items-center flex-wrap gap-3 w-[100%] mt-4">
+              <label className="flex items-center w-full gap-2 font-bold">
+                <Article fontSize="small" style={{ color: "#a3cb39" }} />{" "}
+                Observações
+              </label>
+              <TextField
+                fullWidth
                 variant="outlined"
+                size="small"
+                multiline
+                rows={3}
+                label="Observações"
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
+                autoComplete="off"
+                sx={{
+                  width: "100%",
+                }}
+                placeholder="Digite observações adicionais sobre a proposta..."
               />
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outlined"
-                startIcon={<Add />}
-                onClick={adicionarPagina}
-              >
-                Nova Página
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Download />}
-                onClick={handleDownload}
-              >
-                Baixar PDF
-              </Button>
-            </div>
+          </div>
+
+          {/* Botão para adicionar página */}
+          <div className="flex justify-end mb-4">
+            <ButtonComponent
+              startIcon={<AddCircle fontSize="small" />}
+              title={"Adicionar Página"}
+              subtitle={"Adicionar Página"}
+              buttonSize="large"
+              onClick={adicionarPagina}
+            />
           </div>
 
           <div className="flex flex-wrap gap-2 mb-4">
@@ -772,25 +1206,31 @@ const CadastroPropostaComercial = () => {
                     <input
                       type="text"
                       defaultValue={pagina.titulo}
-                      onBlur={(e) => salvarTitulo(index, e.target.value)}
-                      onKeyPress={(e) => {
+                      onBlur={(e) => {
+                        salvarTitulo(index, e.target.value);
+                      }}
+                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                           salvarTitulo(index, e.target.value);
                         }
+                        if (e.key === "Escape") {
+                          cancelarEdicaoTitulo(index);
+                        }
                       }}
-                      className="border rounded px-2 py-1 text-sm"
+                      className="border rounded px-2 py-1 text-sm w-32"
                       autoFocus
                       style={{ direction: "ltr" }}
                     />
                     <IconButton
                       size="small"
-                      onClick={() =>
-                        salvarTitulo(
-                          index,
-                          document.querySelector(`input[data-index="${index}"]`)
-                            ?.value
-                        )
-                      }
+                      onClick={() => {
+                        const input = document.querySelector(
+                          `input[data-index="${index}"]`,
+                        );
+                        if (input) {
+                          salvarTitulo(index, input.value);
+                        }
+                      }}
                     >
                       <Save fontSize="small" />
                     </IconButton>
@@ -802,19 +1242,52 @@ const CadastroPropostaComercial = () => {
                     </IconButton>
                   </div>
                 ) : (
-                  <Chip
-                    label={pagina.titulo}
-                    color={index === paginaAtual ? "primary" : "default"}
-                    onClick={() => setPaginaAtual(index)}
-                    onDelete={() => iniciarEdicaoTitulo(index)}
-                    deleteIcon={<Edit />}
-                    variant={index === paginaAtual ? "filled" : "outlined"}
-                  />
+                  <div className="flex items-center gap-1">
+                    <Chip
+                      label={pagina.titulo}
+                      color={index === paginaAtual ? "primary" : "default"}
+                      onClick={() => {
+                        const paginasComEdicao = paginas.map((p, i) =>
+                          i !== index && p.editando
+                            ? { ...p, editando: false }
+                            : p,
+                        );
+                        if (paginas.some((p, i) => i !== index && p.editando)) {
+                          setPaginas(paginasComEdicao);
+                        }
+                        setPaginaAtual(index);
+                      }}
+                      variant={index === paginaAtual ? "filled" : "outlined"}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        const novasPaginas = paginas.map((p, i) =>
+                          i !== index ? { ...p, editando: false } : p,
+                        );
+                        novasPaginas[index] = {
+                          ...novasPaginas[index],
+                          editando: true,
+                        };
+                        setPaginas(novasPaginas);
+                      }}
+                      title="Editar título"
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => setConfirmacaoExclusao(index)}
+                      title="Excluir página"
+                      disabled={paginas.length <= 1}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </div>
                 )}
               </div>
             ))}
           </div>
-
           <div className="flex items-start w-full gap-3">
             <div className="border rounded-lg p-4 w-[48%] flex flex-col">
               <div className="flex justify-between items-center mb-4">
@@ -891,16 +1364,37 @@ const CadastroPropostaComercial = () => {
                     </ToggleButton>
                   </ToggleButtonGroup>
 
-                  <ToggleButtonGroup size="small" exclusive sx={{ mr: 1 }}>
+                  <ToggleButtonGroup
+                    size="small"
+                    exclusive
+                    sx={{ mr: 1 }}
+                    value={getCurrentBlockType()}
+                  >
                     <ToggleButton
-                      value="unordered"
-                      onClick={() => toggleBlockType("unordered-list-item")}
+                      value="unordered-list-item"
+                      selected={getCurrentBlockType() === "unordered-list-item"}
+                      onClick={() => {
+                        const currentType = getCurrentBlockType();
+                        if (currentType === "unordered-list-item") {
+                          toggleBlockType("unstyled");
+                        } else {
+                          toggleBlockType("unordered-list-item");
+                        }
+                      }}
                     >
                       <FormatListBulleted />
                     </ToggleButton>
                     <ToggleButton
-                      value="ordered"
-                      onClick={() => toggleBlockType("ordered-list-item")}
+                      value="ordered-list-item"
+                      selected={getCurrentBlockType() === "ordered-list-item"}
+                      onClick={() => {
+                        const currentType = getCurrentBlockType();
+                        if (currentType === "ordered-list-item") {
+                          toggleBlockType("unstyled");
+                        } else {
+                          toggleBlockType("ordered-list-item");
+                        }
+                      }}
                     >
                       <FormatListNumbered />
                     </ToggleButton>
@@ -920,8 +1414,8 @@ const CadastroPropostaComercial = () => {
                         characterCount >= MAX_CHARACTERS_PER_PAGE
                           ? "error"
                           : characterCount >= MAX_CHARACTERS_PER_PAGE * 0.8
-                          ? "warning"
-                          : "default"
+                            ? "warning"
+                            : "default"
                       }
                       variant="outlined"
                       size="small"
@@ -953,7 +1447,7 @@ const CadastroPropostaComercial = () => {
                   <Editor
                     ref={editorRef}
                     editorState={
-                      paginas[paginaAtual]?.conteudo ||
+                      paginas[paginaAtual]?.editorState ||
                       EditorState.createEmpty()
                     }
                     onChange={handleEditorChange}
@@ -976,8 +1470,8 @@ const CadastroPropostaComercial = () => {
                     characterCount >= MAX_CHARACTERS_PER_PAGE
                       ? "error"
                       : characterCount >= MAX_CHARACTERS_PER_PAGE * 0.8
-                      ? "warning"
-                      : "primary"
+                        ? "warning"
+                        : "primary"
                   }
                   sx={{ height: 8, borderRadius: 4 }}
                 />
@@ -1017,6 +1511,24 @@ const CadastroPropostaComercial = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Botões de ação no final do modal */}
+          <div className="flex justify-end gap-3 mt-6">
+            <ButtonComponent
+              startIcon={<Download fontSize="small" />}
+              title={"Gerar PDF"}
+              subtitle={"Gerar PDF"}
+              buttonSize="large"
+              onClick={handleDownload}
+            />
+            <ButtonComponent
+              startIcon={<Save fontSize="small" />}
+              title={"Cadastrar"}
+              subtitle={"Cadastrar"}
+              buttonSize="large"
+              onClick={criarPropostaComercial}
+            />
           </div>
         </div>
       </CentralModal>

@@ -24,7 +24,7 @@ const Navbar = () => {
   }, [location]);
 
   return (
-    <div className="hidden sm:hidden md:hidden lg:block fixed top-0 left-0 z-[9999]">
+    <div className="hidden sm:hidden md:hidden lg:block fixed top-0 left-0 ">
       <div className="lg:block hidden">
         <div
           className="transition-all duration-500 bg-primary h-screen bg-cover bg-no-repeat bg-center flex flex-col p-4 overflow-hidden"

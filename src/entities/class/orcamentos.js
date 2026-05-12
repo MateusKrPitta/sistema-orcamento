@@ -1,10 +1,39 @@
 export const cadastrosOrcamentos = (orcamentos) => {
   return orcamentos.map((orcamento) => ({
     id: orcamento.id,
-    cliente: orcamento.nome,
-    valorTotal: orcamento.valorTotal,
-    status: orcamento.status,
+    cliente:
+      orcamento.cliente?.nome ||
+      orcamento.cliente_nome ||
+      "Cliente não informado",
+    valor_total: formatarValor(orcamento.valor_total),
+    status: formatarStatus(orcamento.status),
     categoria: orcamento.categoria,
-    ativo: orcamento.ativo,
+    numero_orcamento: orcamento.numero,
+    data_emissao: formatarData(orcamento.data_emissao),
   }));
+};
+
+const formatarValor = (valor) => {
+  const numero = typeof valor === "string" ? parseFloat(valor) : valor;
+
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(numero || 0);
+};
+
+const formatarStatus = (status) => {
+  const statusMap = {
+    pendente_ligacao: "Pendente Ligação",
+    em_andamento: "Em Andamento",
+    venda_concluida: "Venda Concluída",
+    cancelado: "Cancelado",
+  };
+  return statusMap[status] || status;
+};
+
+const formatarData = (dataString) => {
+  if (!dataString) return "";
+  const data = new Date(dataString);
+  return data.toLocaleDateString("pt-BR");
 };

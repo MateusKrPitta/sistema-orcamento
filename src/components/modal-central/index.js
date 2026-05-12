@@ -26,7 +26,7 @@ const CentralModal = ({
       aria-describedby="central-modal-description"
       sx={{
         display: "flex",
-        zIndex: 9999,
+        zIndex: 500,
         alignItems: "center",
         justifyContent: "center",
         padding: { xs: "10px", sm: "20px" },
