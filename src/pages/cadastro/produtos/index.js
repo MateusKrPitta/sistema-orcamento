@@ -85,7 +85,7 @@ const Produtos = () => {
         searchTerm,
         page,
         limit,
-        ativoFiltro
+        ""
       );
       setProdutos(response.data || []);
       setTotalRegistros(response.meta?.total || 0);
@@ -105,7 +105,7 @@ const Produtos = () => {
         termoBusca,
         page,
         limit,
-        ativoFiltro
+        ""
       );
 
       setProdutos(response.data || []);
