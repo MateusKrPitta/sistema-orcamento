@@ -9,7 +9,6 @@ const Navbar = () => {
   const [activeRoute, setActiveRoute] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleNavigate = (route) => {
     navigate(route);
@@ -29,8 +28,6 @@ const Navbar = () => {
         <div
           className="transition-all duration-500 bg-primary h-screen bg-cover bg-no-repeat bg-center flex flex-col p-4 overflow-hidden"
           style={{ width: "200px" }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <div className="w-full items-center flex justify-center">
             <img

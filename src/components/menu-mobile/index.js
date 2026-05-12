@@ -5,15 +5,12 @@ import {
   Dashboard,
   Dvr,
   Menu,
-  Inventory2,
   Assignment,
   ExitToApp,
 } from "@mui/icons-material";
 import { IconButton } from "@mui/material";
 
 const MenuMobile = () => {
-  const [logout, setLogout] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const navigate = useNavigate();
@@ -79,8 +76,6 @@ const MenuMobile = () => {
   };
 
   const handleLogout = () => {
-    setLogout(false);
-    setLoading(true);
 
     const originalPushState = window.history.pushState;
     window.history.pushState = function () {};
@@ -97,7 +92,6 @@ const MenuMobile = () => {
       setTimeout(() => {
         navigate("/login", { replace: true });
         setTimeout(() => {
-          setLoading(false);
           window.location.reload();
         }, 100);
       }, 500);

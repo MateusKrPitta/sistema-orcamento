@@ -36,7 +36,7 @@ const Cadastro = () => {
                 <HeaderCadastro />
               </div>
               <div className="flex items-center justify-center gap-4 flex-col w-[70%]">
-                <img style={{ width: "40%" }} src={ImagemCadastro}></img>
+                <img style={{ width: "40%" }} src={ImagemCadastro} alt="Cadastro" />
                 <label className="text-xl text-primary font-bold">
                   Selecione uma opção do menu!
                 </label>

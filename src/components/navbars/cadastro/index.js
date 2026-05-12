@@ -2,25 +2,14 @@ import React, { useState, useEffect } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import ButtonComponent from "../../button";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Category, ProductionQuantityLimits, Work } from "@mui/icons-material";
+import { Category, ProductionQuantityLimits } from "@mui/icons-material";
 
 const HeaderCadastro = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeSection, setActiveSection] = useState("");
-  const [permissions, setPermissions] = useState([]);
 
   useEffect(() => {
-    const savedPermissions = sessionStorage.getItem("permissoes_id");
-    if (savedPermissions) {
-      try {
-        const parsedPermissions = JSON.parse(savedPermissions);
-        setPermissions(parsedPermissions);
-      } catch (error) {
-        console.error("Erro ao parsear permissões:", error);
-      }
-    }
-
     const path = location.pathname.split("/cadastro/")[1];
     setActiveSection(path);
   }, [location]);

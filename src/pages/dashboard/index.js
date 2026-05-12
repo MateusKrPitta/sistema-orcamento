@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Navbar from "../../components/navbars/header";
 import MenuMobile from "../../components/menu-mobile";
 import HeaderPerfil from "../../components/navbars/perfil";
@@ -8,24 +8,11 @@ import {
   AttachMoney,
   CheckCircle,
   Description,
-  Person,
   TrendingUp,
-  ArrowDropDown,
-  ArrowDropUp,
-  PendingActions,
-  CheckCircleOutline,
-  Cancel,
 } from "@mui/icons-material";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -64,13 +51,13 @@ const Dashboard = () => {
     cancelado: "Cancelado",
   };
 
-  const transformStatusData = (porStatus) => {
+  const transformStatusData = useCallback((porStatus) => {
     return Object.keys(porStatus).map((status) => ({
       name: STATUS_LABELS[status] || status,
       value: porStatus[status],
       color: STATUS_COLORS[status] || "#8884d8",
     }));
-  };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,7 +93,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [transformStatusData]);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("pt-BR", {

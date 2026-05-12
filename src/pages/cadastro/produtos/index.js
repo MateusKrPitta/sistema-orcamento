@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Navbar from "../../../components/navbars/header";
 import MenuMobile from "../../../components/menu-mobile";
 import HeaderPerfil from "../../../components/navbars/perfil";
@@ -8,7 +8,6 @@ import { IconButton, InputAdornment, TextField } from "@mui/material";
 import {
   AddCircle,
   Edit,
-  Person,
   ProductionQuantityLimits,
   Save,
   Search,
@@ -33,16 +32,12 @@ const Produtos = () => {
   const [cadastro, setCadastro] = useState(false);
   const [produtoEditando, setProdutoEditando] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [loadingBusca, setLoadingBusca] = useState(false);
-  const [loadingToggle, setLoadingToggle] = useState(false);
   const [nome, setNome] = useState("");
   const [produtos, setProdutos] = useState([]);
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [limitePorPagina, setLimitePorPagina] = useState(10);
   const [totalRegistros, setTotalRegistros] = useState(0);
-  const [totalPaginas, setTotalPaginas] = useState(1);
   const [termoBusca, setTermoBusca] = useState("");
-  const [ativoFiltro, setAtivoFiltro] = useState("");
   const [filtroAplicado, setFiltroAplicado] = useState(false);
 
   const debouncedSearchRef = useRef(
@@ -85,7 +80,6 @@ const Produtos = () => {
   };
 
   const executarBuscaComTermo = async (searchTerm, page, limit) => {
-    setLoadingBusca(true);
     try {
       const response = await buscarNomeProdutos(
         searchTerm,
@@ -95,11 +89,8 @@ const Produtos = () => {
       );
       setProdutos(response.data || []);
       setTotalRegistros(response.meta?.total || 0);
-      setTotalPaginas(response.meta?.last_page || 1);
     } catch (error) {
       console.error("Erro inesperado ao buscar produtos:", error);
-    } finally {
-      setLoadingBusca(false);
     }
   };
 
@@ -107,7 +98,6 @@ const Produtos = () => {
     page = paginaAtual + 1,
     limit = limitePorPagina
   ) => {
-    setLoadingBusca(true);
     setFiltroAplicado(true);
 
     try {
@@ -120,11 +110,8 @@ const Produtos = () => {
 
       setProdutos(response.data || []);
       setTotalRegistros(response.meta?.total || 0);
-      setTotalPaginas(response.meta?.last_page || 1);
     } catch (error) {
       console.error("Erro inesperado ao buscar produtos:", error);
-    } finally {
-      setLoadingBusca(false);
     }
   };
 
@@ -132,16 +119,12 @@ const Produtos = () => {
     page = paginaAtual + 1,
     limit = limitePorPagina
   ) => {
-    setLoadingBusca(true);
     try {
       const response = await buscarProdutos(page, limit);
       setProdutos(response.data || []);
       setTotalRegistros(response.meta?.total || 0);
-      setTotalPaginas(response.meta?.last_page || 1);
     } catch (error) {
       console.error("Erro inesperado ao buscar produtos:", error);
-    } finally {
-      setLoadingBusca(false);
     }
   };
 
@@ -221,7 +204,6 @@ const Produtos = () => {
   }, []);
 
   const toggleStatusProduto = async (produto) => {
-    setLoadingToggle(true);
     try {
       let resultado;
 
@@ -238,8 +220,6 @@ const Produtos = () => {
       }
     } catch (error) {
       console.error("Erro inesperado:", error);
-    } finally {
-      setLoadingToggle(false);
     }
   };
 
@@ -405,7 +385,7 @@ const Produtos = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Person />
+                      <ProductionQuantityLimits />
                       </InputAdornment>
                     ),
                   }}

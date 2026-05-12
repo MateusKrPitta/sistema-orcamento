@@ -22,22 +22,17 @@ const Categoria = () => {
   const [editar, setEditar] = useState(false);
   const [cadastro, setCadastro] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loadingBusca, setLoadingBusca] = useState(false);
-  const [loadingToggle, setLoadingToggle] = useState(false);
   const [nome, setNome] = useState("");
   const [busca, setBusca] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [categoriaEditando, setCategoriaEditando] = useState(null);
 
   const buscarCategorias = async () => {
-    setLoadingBusca(true);
     try {
       const response = await buscarCartegoria();
       setCategorias(response.data);
     } catch (error) {
       console.error("Erro inesperado ao buscar categorias:", error);
-    } finally {
-      setLoadingBusca(false);
     }
   };
 
@@ -106,7 +101,6 @@ const Categoria = () => {
   };
 
   const toggleStatusCategoria = async (categoria) => {
-    setLoadingToggle(true);
     try {
       let resultado;
 
@@ -123,8 +117,6 @@ const Categoria = () => {
       }
     } catch (error) {
       console.error("Erro inesperado:", error);
-    } finally {
-      setLoadingToggle(false);
     }
   };
 
