@@ -84,21 +84,28 @@ const DadosCliente = ({
     }
   };
 
-  useEffect(() => {
-    const carregarClientes = async () => {
-      try {
-        const response = await buscarClientes();
-        if (response.success) {
-          const clientesArray = response.data.data || response.data || [];
-          setClientesDisponiveis(clientesArray);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar clientes:", error);
-      }
-    };
+  const [inputValue, setInputValue] = useState("");
 
-    carregarClientes();
-  }, []);
+  const carregarClientes = async (search = "") => {
+    try {
+      const response = await buscarClientes(search);
+      if (response.success) {
+        const clientesArray = response.data.data || response.data || [];
+        setClientesDisponiveis(clientesArray);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      carregarClientes(inputValue);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputValue]);
+
   return (
     <div className="w-[48%]">
       <div
@@ -113,9 +120,12 @@ const DadosCliente = ({
           <Autocomplete
             size="small"
             options={clientesDisponiveis}
-            getOptionLabel={(option) => option.nome}
+            getOptionLabel={(option) => option.nome || ""}
             value={clienteSelecionado}
             onChange={handleClienteSelecionado}
+            onInputChange={(event, newInputValue) => {
+              setInputValue(newInputValue);
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}

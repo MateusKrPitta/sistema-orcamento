@@ -29,20 +29,30 @@ const InformacoesGerais = ({
   loadingCategorias,
   setCategorias,
 }) => {
-  useEffect(() => {
-    const carregarCategorias = async () => {
-      try {
-        const response = await buscarCategoriasAtivos();
-        if (response.success) {
-          setCategorias(response.data);
-        }
-      } catch (error) {
-        console.error("Erro ao carregar categorias:", error);
-      }
-    };
+  const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    carregarCategorias();
-  }, []); // ✅ Array vazio - executa apenas uma vez
+  const carregarCategorias = async (search = "") => {
+    setLoading(true);
+    try {
+      const response = await buscarCategoriasAtivos(search);
+      if (response.success) {
+        setCategorias(response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      carregarCategorias(inputValue);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputValue]);
 
   return (
     <div className="w-[50%]">
@@ -133,9 +143,12 @@ const InformacoesGerais = ({
           <Autocomplete
             size="small"
             options={categorias}
-            loading={loadingCategorias}
-            getOptionLabel={(option) => option.nome}
+            loading={loading || loadingCategorias}
+            getOptionLabel={(option) => option.nome || ""}
             value={categoriaSelecionada}
+            onInputChange={(event, newInputValue) => {
+              setInputValue(newInputValue);
+            }}
             onChange={(event, newValue) => {
               setCategoriaSelecionada(newValue);
             }}

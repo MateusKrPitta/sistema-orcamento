@@ -26,6 +26,7 @@ import {
   MenuItem,
   CircularProgress,
   Box,
+  Autocomplete,
 } from "@mui/material";
 import { buscarPropostas } from "../../services/get/proposta-comercial";
 import { deletarPropostaId } from "../../services/delete/proposta";
@@ -65,54 +66,52 @@ const PropostaComercial = () => {
     search: "",
   });
 
+  const [inicializado, setInicializado] = useState(false);
+
   const [loadingFiltros, setLoadingFiltros] = useState({
     clientes: false,
     responsaveis: false,
     categorias: false,
   });
 
-  const carregarClientes = async () => {
+  const [inputCliente, setInputCliente] = useState("");
+  const [inputCategoria, setInputCategoria] = useState("");
+  const [inputResponsavel, setInputResponsavel] = useState("");
+
+  const carregarClientes = async (search = "") => {
     setLoadingFiltros((prev) => ({ ...prev, clientes: true }));
     try {
-      const response = await buscarClientes();
+      const response = await buscarClientes(search);
       if (response.success) {
         const clientesArray = response.data.data || response.data || [];
         setClientesDisponiveis(clientesArray);
       }
     } catch (error) {
       console.error("Erro ao carregar clientes:", error);
-      CustomToast({
-        type: "error",
-        message: "Erro ao carregar clientes",
-      });
     } finally {
       setLoadingFiltros((prev) => ({ ...prev, clientes: false }));
     }
   };
 
-  const carregarResponsaveis = async () => {
+  const carregarResponsaveis = async (search = "") => {
     setLoadingFiltros((prev) => ({ ...prev, responsaveis: true }));
     try {
-      const response = await buscarUsuarios();
+      const response = await buscarUsuarios(search);
       if (response.success) {
         const responsavelArray = response.data.data || response.data || [];
         setResponsaveis(responsavelArray);
       }
     } catch (error) {
       console.error("Erro ao carregar responsáveis:", error);
-      CustomToast({
-        type: "error",
-        message: "Erro ao carregar responsáveis",
-      });
     } finally {
       setLoadingFiltros((prev) => ({ ...prev, responsaveis: false }));
     }
   };
 
-  const buscarCategorias = async () => {
+  const buscarCategorias = async (search = "") => {
     setLoadingFiltros((prev) => ({ ...prev, categorias: true }));
     try {
-      const response = await buscarCartegoria();
+      const response = await buscarCartegoria(search);
       if (response.success) {
         setCategorias(response.data);
       } else {
@@ -120,14 +119,35 @@ const PropostaComercial = () => {
       }
     } catch (error) {
       console.error("Erro inesperado ao buscar categorias:", error);
-      CustomToast({
-        type: "error",
-        message: "Erro ao carregar categorias",
-      });
     } finally {
       setLoadingFiltros((prev) => ({ ...prev, categorias: false }));
     }
   };
+
+  useEffect(() => {
+    if (!filtro) return;
+    const timer = setTimeout(() => {
+      carregarClientes(inputCliente);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCliente, filtro]);
+
+  useEffect(() => {
+    if (!filtro) return;
+    const timer = setTimeout(() => {
+      buscarCategorias(inputCategoria);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCategoria, filtro]);
+
+  useEffect(() => {
+    if (!filtro) return;
+    const timer = setTimeout(() => {
+      carregarResponsaveis(inputResponsavel);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputResponsavel, filtro]);
+
 
   const carregarPropostas = useCallback(
     async (pagina = 1, limite = 10) => {
@@ -162,33 +182,31 @@ const PropostaComercial = () => {
   );
 
   useEffect(() => {
-    carregarPropostas(1, 10);
-  }, [carregarPropostas]);
+    setInicializado(true);
+  }, []);
 
   useEffect(() => {
+    if (!inicializado) return;
+
     const delayDebounceFn = setTimeout(() => {
-      carregarPropostas(1, limitePorPagina);
-    }, 800);
+      carregarPropostas(paginaAtual + 1, limitePorPagina);
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [filtros.search, limitePorPagina]);
+  }, [filtros, paginaAtual, limitePorPagina, inicializado, carregarPropostas]);
+
 
   useEffect(() => {
     if (filtro) {
-      const carregarDadosFiltros = async () => {
-        await Promise.all([
-          carregarClientes(),
-          carregarResponsaveis(),
-          buscarCategorias(),
-        ]);
-      };
-      carregarDadosFiltros();
+      carregarClientes("");
+      carregarResponsaveis("");
+      buscarCategorias("");
     }
-  }, [filtro, carregarClientes, carregarResponsaveis]);
+  }, [filtro]);
 
   const aplicarFiltros = () => {
     setFiltro(false);
-    carregarPropostas(1, limitePorPagina);
+    setPaginaAtual(0);
   };
 
   const limparFiltros = () => {
@@ -212,13 +230,11 @@ const PropostaComercial = () => {
 
   const handleMudarPagina = (novaPagina) => {
     setPaginaAtual(novaPagina);
-    carregarPropostas(novaPagina + 1, limitePorPagina);
   };
 
   const handleMudarLimitePorPagina = (novoLimite, novaPagina) => {
     setLimitePorPagina(novoLimite);
     setPaginaAtual(0);
-    carregarPropostas(1, novoLimite);
   };
 
   const handleDuplicar = async (row) => {
@@ -291,111 +307,105 @@ const PropostaComercial = () => {
   };
 
   const renderSelectClientes = () => (
-    <TextField
+    <Autocomplete
       fullWidth
-      variant="outlined"
       size="small"
-      label="Cliente"
-      value={filtros.cliente_id}
-      onChange={(e) => handleFiltroChange("cliente_id", e.target.value)}
-      autoComplete="off"
-      select
-      disabled={loadingFiltros.clientes}
+      options={clientesDisponiveis}
+      loading={loadingFiltros.clientes}
+      getOptionLabel={(option) => option.nome || ""}
+      value={clientesDisponiveis.find(c => c.id === filtros.cliente_id) || null}
+      onInputChange={(e, val) => setInputCliente(val)}
+      onChange={(e, val) => handleFiltroChange("cliente_id", val?.id || "")}
       sx={{
         width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
       }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Person />
-          </InputAdornment>
-        ),
-        endAdornment: loadingFiltros.clientes && (
-          <InputAdornment position="end">
-            <CircularProgress size={20} />
-          </InputAdornment>
-        ),
-      }}
-    >
-      <MenuItem value="">Todos os Clientes</MenuItem>
-      {clientesDisponiveis.map((cliente) => (
-        <MenuItem key={cliente.id} value={cliente.id}>
-          {cliente.nome}
-        </MenuItem>
-      ))}
-    </TextField>
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Cliente"
+          placeholder="Digite para buscar..."
+          InputProps={{
+            ...params.InputProps,
+            startAdornment: (
+              <>
+                <InputAdornment position="start">
+                  <Person />
+                </InputAdornment>
+                {params.InputProps.startAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
+    />
   );
 
   const renderSelectResponsaveis = () => (
-    <TextField
+    <Autocomplete
       fullWidth
-      variant="outlined"
       size="small"
-      label="Responsável"
-      value={filtros.user_id}
-      onChange={(e) => handleFiltroChange("user_id", e.target.value)}
-      autoComplete="off"
-      select
-      disabled={loadingFiltros.responsaveis}
+      options={responsaveis}
+      loading={loadingFiltros.responsaveis}
+      getOptionLabel={(option) => option.nome || ""}
+      value={responsaveis.find(r => r.id === filtros.user_id) || null}
+      onInputChange={(e, val) => setInputResponsavel(val)}
+      onChange={(e, val) => handleFiltroChange("user_id", val?.id || "")}
       sx={{
         width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
       }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Person />
-          </InputAdornment>
-        ),
-        endAdornment: loadingFiltros.responsaveis && (
-          <InputAdornment position="end">
-            <CircularProgress size={20} />
-          </InputAdornment>
-        ),
-      }}
-    >
-      <MenuItem value="">Todos os Responsáveis</MenuItem>
-      {responsaveis.map((responsavel) => (
-        <MenuItem key={responsavel.id} value={responsavel.id}>
-          {responsavel.nome}
-        </MenuItem>
-      ))}
-    </TextField>
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Responsável"
+          placeholder="Digite para buscar..."
+          InputProps={{
+            ...params.InputProps,
+            startAdornment: (
+              <>
+                <InputAdornment position="start">
+                  <Person />
+                </InputAdornment>
+                {params.InputProps.startAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
+    />
   );
 
   const renderSelectCategorias = () => (
-    <TextField
+    <Autocomplete
       fullWidth
-      variant="outlined"
       size="small"
-      label="Categoria"
-      value={filtros.categoria_id}
-      onChange={(e) => handleFiltroChange("categoria_id", e.target.value)}
-      autoComplete="off"
-      select
-      disabled={loadingFiltros.categorias}
+      options={categorias}
+      loading={loadingFiltros.categorias}
+      getOptionLabel={(option) => option.nome || ""}
+      value={categorias.find(c => c.id === filtros.categoria_id) || null}
+      onInputChange={(e, val) => setInputCategoria(val)}
+      onChange={(e, val) => handleFiltroChange("categoria_id", val?.id || "")}
       sx={{
         width: { xs: "72%", sm: "50%", md: "40%", lg: "48%" },
       }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <Category />
-          </InputAdornment>
-        ),
-        endAdornment: loadingFiltros.categorias && (
-          <InputAdornment position="end">
-            <CircularProgress size={20} />
-          </InputAdornment>
-        ),
-      }}
-    >
-      <MenuItem value="">Todas as Categorias</MenuItem>
-      {categorias.map((categoria) => (
-        <MenuItem key={categoria.id} value={categoria.id}>
-          {categoria.nome}
-        </MenuItem>
-      ))}
-    </TextField>
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Categoria"
+          placeholder="Digite para buscar..."
+          InputProps={{
+            ...params.InputProps,
+            startAdornment: (
+              <>
+                <InputAdornment position="start">
+                  <Category />
+                </InputAdornment>
+                {params.InputProps.startAdornment}
+              </>
+            ),
+          }}
+        />
+      )}
+    />
   );
 
   return (

@@ -50,6 +50,7 @@ import {
   MenuItem,
   Typography,
   Box,
+  Autocomplete,
 } from "@mui/material";
 import html2pdf from "html2pdf.js";
 import "./cadastrar.css";
@@ -92,6 +93,56 @@ const CadastroPropostaComercial = ({ onPropostaCriada }) => {
   const editorRef = useRef(null);
   const MAX_CHARACTERS_PER_PAGE = 3500;
   const [characterCount, setCharacterCount] = useState(0);
+  const [inputCliente, setInputCliente] = useState("");
+  const [inputCategoria, setInputCategoria] = useState("");
+  const [loadingClientesSearch, setLoadingClientesSearch] = useState(false);
+  const [loadingCategoriasSearch, setLoadingCategoriasSearch] = useState(false);
+
+  const carregarClientes = async (search = "") => {
+    setLoadingClientesSearch(true);
+    try {
+      const response = await buscarClientes(search);
+      if (response.success) {
+        const clientesArray = response.data.data || response.data || [];
+        setClientesDisponiveis(clientesArray);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+    } finally {
+      setLoadingClientesSearch(false);
+    }
+  };
+
+  const buscarCategorias = async (search = "") => {
+    setLoadingCategoriasSearch(true);
+    try {
+      const response = await buscarCartegoria(search);
+      if (response.success) {
+        const categoriasArray = response.data.data || response.data || [];
+        setCategorias(categoriasArray);
+      }
+    } catch (error) {
+      console.error("Erro inesperado ao buscar categorias:", error);
+    } finally {
+      setLoadingCategoriasSearch(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!cadastro) return;
+    const timer = setTimeout(() => {
+      carregarClientes(inputCliente);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCliente, cadastro]);
+
+  useEffect(() => {
+    if (!cadastro) return;
+    const timer = setTimeout(() => {
+      buscarCategorias(inputCategoria);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCategoria, cadastro]);
 
   const statusOptions = [
     { value: "pendente", label: "Pendente" },
@@ -748,42 +799,11 @@ const CadastroPropostaComercial = ({ onPropostaCriada }) => {
     }
   }, [paginaAtual]);
 
-  const carregarClientes = async () => {
-    try {
-      const response = await buscarClientes();
-      if (response.success) {
-        const clientesArray = response.data.data || response.data || [];
-        setClientesDisponiveis(clientesArray);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar clientes:", error);
-      CustomToast({
-        type: "error",
-        message: "Erro ao carregar clientes. Por favor, tente novamente.",
-      });
-    }
-  };
-
-  const buscarCategorias = async () => {
-    try {
-      const response = await buscarCartegoria();
-      if (response.success) {
-        const categoriasArray = response.data.data || response.data || [];
-        setCategorias(categoriasArray);
-      }
-    } catch (error) {
-      console.error("Erro inesperado ao buscar categorias:", error);
-      CustomToast({
-        type: "error",
-        message: "Erro ao carregar categorias. Por favor, tente novamente.",
-      });
-    }
-  };
 
   useEffect(() => {
     if (cadastro) {
-      carregarClientes();
-      buscarCategorias();
+      carregarClientes("");
+      buscarCategorias("");
     }
   }, [cadastro]);
   useEffect(() => {
@@ -849,33 +869,35 @@ const CadastroPropostaComercial = ({ onPropostaCriada }) => {
               }}
             />
 
-            <TextField
+            <Autocomplete
               fullWidth
-              variant="outlined"
               size="small"
-              label="Categoria"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              select
+              options={categorias}
+              loading={loadingCategoriasSearch}
+              getOptionLabel={(option) => option.nome || ""}
+              value={categorias.find(c => c.id.toString() === categoria.toString()) || null}
+              onInputChange={(e, val) => setInputCategoria(val)}
+              onChange={(e, val) => setCategoria(val?.id?.toString() || "")}
               sx={{ width: { xs: "95%", sm: "95%", md: "40%", lg: "15%" } }}
-              autoComplete="off"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Category />
-                  </InputAdornment>
-                ),
-              }}
-            >
-              <MenuItem value="">
-                <em>Selecione uma categoria</em>
-              </MenuItem>
-              {categorias.map((cat) => (
-                <MenuItem key={cat.id} value={cat.id}>
-                  {cat.nome}
-                </MenuItem>
-              ))}
-            </TextField>
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Categoria"
+                  placeholder="Busque..."
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <InputAdornment position="start">
+                          <Category />
+                        </InputAdornment>
+                        {params.InputProps.startAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
 
             <TextField
               fullWidth
@@ -1046,35 +1068,37 @@ const CadastroPropostaComercial = ({ onPropostaCriada }) => {
                 </Box>
               ) : (
                 <>
-                  <TextField
+                  <Autocomplete
                     fullWidth
-                    variant="outlined"
                     size="small"
-                    label="Cliente *"
-                    value={cliente}
-                    onChange={(e) => setCliente(e.target.value)}
-                    autoComplete="off"
-                    select
+                    options={clientesDisponiveis}
+                    loading={loadingClientesSearch}
+                    getOptionLabel={(option) => option.nome || ""}
+                    value={clientesDisponiveis.find(c => c.id.toString() === cliente.toString()) || null}
+                    onInputChange={(e, val) => setInputCliente(val)}
+                    onChange={(e, val) => setCliente(val?.id?.toString() || "")}
                     sx={{
                       width: { xs: "72%", sm: "50%", md: "40%", lg: "30%" },
                     }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Person />
-                        </InputAdornment>
-                      ),
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>Selecione um cliente</em>
-                    </MenuItem>
-                    {clientesDisponiveis.map((cli) => (
-                      <MenuItem key={cli.id} value={cli.id}>
-                        {cli.nome}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Cliente *"
+                        placeholder="Digite para buscar..."
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <>
+                              <InputAdornment position="start">
+                                <Person />
+                              </InputAdornment>
+                              {params.InputProps.startAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
 
                   <TextField
                     fullWidth

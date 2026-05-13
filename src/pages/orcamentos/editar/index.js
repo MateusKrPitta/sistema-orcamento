@@ -126,13 +126,83 @@ const EditarOrcamento = ({
   const [nomeClienteErro, setNomeClienteErro] = useState(false);
   const [telefoneClienteErro, setTelefoneClienteErro] = useState(false);
   const [tipoPagamentoErro, setTipoPagamentoErro] = useState(false);
+  const [inputCliente, setInputCliente] = useState("");
+  const [inputCategoria, setInputCategoria] = useState("");
+  const [inputProduto, setInputProduto] = useState("");
+  const [loadingClientesSearch, setLoadingClientesSearch] = useState(false);
+  const [loadingCategoriasSearch, setLoadingCategoriasSearch] = useState(false);
+  const [loadingProdutosSearch, setLoadingProdutosSearch] = useState(false);
+
+  const carregarProdutos = async (search = "") => {
+    setLoadingProdutosSearch(true);
+    try {
+      const response = await buscarProdutosAtivo(search);
+      if (response.success) {
+        setProdutosDisponiveis(response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+    } finally {
+      setLoadingProdutosSearch(false);
+    }
+  };
+
+  const carregarClientes = async (search = "") => {
+    setLoadingClientesSearch(true);
+    try {
+      const response = await buscarClientes(search);
+      if (response.success) {
+        const clientesArray = response.data.data || response.data || [];
+        setClientesDisponiveis(clientesArray);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+    } finally {
+      setLoadingClientesSearch(false);
+    }
+  };
+
+  const carregarCategorias = async (search = "") => {
+    setLoadingCategoriasSearch(true);
+    try {
+      const response = await buscarCategoriasAtivos(search);
+      if (response.success) {
+        setCategorias(response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
+    } finally {
+      setLoadingCategoriasSearch(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      carregarClientes(inputCliente);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCliente, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      carregarCategorias(inputCategoria);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCategoria, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => {
+      carregarProdutos(inputProduto);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputProduto, open]);
 
   useEffect(() => {
     if (dadosOrcamento && open) {
       inicializarDados();
-      carregarClientes();
-      carregarCategorias();
-      carregarProdutos();
     }
   }, [dadosOrcamento, open]);
 
@@ -538,48 +608,6 @@ const EditarOrcamento = ({
     setProdutoPrecoFormatado(valorFormatado);
   };
 
-  const carregarProdutos = async () => {
-    setLoadingProdutos(true);
-    try {
-      const response = await buscarProdutosAtivo();
-      if (response.success) {
-        setProdutosDisponiveis(response.data);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
-    } finally {
-      setLoadingProdutos(false);
-    }
-  };
-
-  const carregarClientes = async () => {
-    setLoadingClientes(true);
-    try {
-      const response = await buscarClientes();
-      if (response.success) {
-        const clientesArray = response.data.data || response.data || [];
-        setClientesDisponiveis(clientesArray);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar clientes:", error);
-    } finally {
-      setLoadingClientes(false);
-    }
-  };
-
-  const carregarCategorias = async () => {
-    setLoadingCategorias(true);
-    try {
-      const response = await buscarCategoriasAtivos();
-      if (response.success) {
-        setCategorias(response.data);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar categorias:", error);
-    } finally {
-      setLoadingCategorias(false);
-    }
-  };
 
   const handleClienteSelecionado = (event, value) => {
     if (value) {
@@ -893,9 +921,10 @@ const EditarOrcamento = ({
                     <Autocomplete
                       size="small"
                       options={categorias}
-                      loading={loadingCategorias}
-                      getOptionLabel={(option) => option.nome}
+                      loading={loadingCategoriasSearch || loadingCategorias}
+                      getOptionLabel={(option) => option.nome || ""}
                       value={categoriaSelecionada}
+                      onInputChange={(e, val) => setInputCategoria(val)}
                       onChange={(event, newValue) => {
                         setCategoriaSelecionada(newValue);
                       }}
@@ -936,9 +965,10 @@ const EditarOrcamento = ({
                     <Autocomplete
                       size="small"
                       options={clientesDisponiveis}
-                      loading={loadingClientes}
-                      getOptionLabel={(option) => option.nome}
+                      loading={loadingClientesSearch || loadingClientes}
+                      getOptionLabel={(option) => option.nome || ""}
                       value={clienteSelecionado}
+                      onInputChange={(e, val) => setInputCliente(val)}
                       onChange={handleClienteSelecionado}
                       renderInput={(params) => (
                         <TextField
@@ -1298,13 +1328,14 @@ const EditarOrcamento = ({
                   <Autocomplete
                     size="small"
                     options={produtosDisponiveis}
-                    loading={loadingProdutos}
+                    loading={loadingProdutosSearch || loadingProdutos}
                     getOptionLabel={(option) => option.nome || ""}
                     value={produtoNome ? { nome: produtoNome } : null}
                     onChange={handleProdutoSelecionado}
                     freeSolo
                     onInputChange={(event, newInputValue) => {
                       setProdutoNome(newInputValue);
+                      setInputProduto(newInputValue);
                     }}
                     renderInput={(params) => (
                       <TextField

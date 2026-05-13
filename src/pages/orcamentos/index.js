@@ -4,7 +4,7 @@ import MenuMobile from "../../components/menu-mobile";
 import HeaderPerfil from "../../components/navbars/perfil";
 import { motion } from "framer-motion";
 import DvrIcon from "@mui/icons-material/Dvr";
-import { IconButton, InputAdornment, MenuItem, TextField } from "@mui/material";
+import { IconButton, InputAdornment, MenuItem, TextField, Autocomplete } from "@mui/material";
 import {
   Article,
   Category,
@@ -79,6 +79,48 @@ const Orcamentos = () => {
     status: "",
   });
   const [aplicandoFiltro, setAplicandoFiltro] = useState(false);
+  const [inputCliente, setInputCliente] = useState("");
+  const [inputCategoria, setInputCategoria] = useState("");
+  const [loadingClientesFiltro, setLoadingClientesFiltro] = useState(false);
+  const [loadingCategoriasFiltro, setLoadingCategoriasFiltro] = useState(false);
+
+  const carregarClientesFiltro = async (search = "") => {
+    setLoadingClientesFiltro(true);
+    try {
+      const response = await buscarClientes(search);
+      setClientes(response.data || []);
+    } catch (error) {
+      console.error("Erro ao buscar clientes para filtro:", error);
+    } finally {
+      setLoadingClientesFiltro(false);
+    }
+  };
+
+  const carregarCategoriasFiltro = async (search = "") => {
+    setLoadingCategoriasFiltro(true);
+    try {
+      const response = await buscarCartegoria(search);
+      setCategorias(response.data || []);
+    } catch (error) {
+      console.error("Erro ao buscar categorias para filtro:", error);
+    } finally {
+      setLoadingCategoriasFiltro(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filtro) carregarClientesFiltro(inputCliente);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCliente, filtro]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filtro) carregarCategoriasFiltro(inputCategoria);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputCategoria, filtro]);
 
   const handlePageChange = useCallback((newPage) => {
     setPaginaAtual(newPage);
@@ -324,7 +366,7 @@ const Orcamentos = () => {
   const ModalFiltro = async () => {
     try {
       setFiltro(true);
-      await Promise.all([buscarClientesFiltro(), buscarCategoriasFiltro()]);
+      await Promise.all([carregarClientesFiltro(), carregarCategoriasFiltro()]);
     } catch (error) {
       console.error("Erro ao carregar dados do filtro:", error);
     }
@@ -460,7 +502,6 @@ const Orcamentos = () => {
       setCarregandoDados(true);
       try {
         await ListaProdutos();
-        await ListaOrcamentos(1, limitePorPagina);
         setInicializado(true);
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
@@ -505,25 +546,6 @@ const Orcamentos = () => {
     ListaOrcamentos,
   ]);
 
-  const buscarClientesFiltro = async () => {
-    try {
-      const response = await buscarClientes();
-      setClientes(response.data || []);
-    } catch (error) {
-      console.error("Erro ao buscar clientes para filtro:", error);
-      setClientes([]);
-    }
-  };
-
-  const buscarCategoriasFiltro = async () => {
-    try {
-      const response = await buscarCartegoria();
-      setCategorias(response.data || []);
-    } catch (error) {
-      console.error("Erro ao buscar categorias para filtro:", error);
-      setCategorias([]);
-    }
-  };
 
   return (
     <div className="w-full flex min-h-screen bg-gray-50">
@@ -860,147 +882,85 @@ const Orcamentos = () => {
                 }}
               />
 
-              {/* Cliente - Com MenuItem */}
-              <TextField
+              {/* Cliente - Com Autocomplete */}
+              <Autocomplete
                 fullWidth
-                variant="outlined"
                 size="small"
-                label="Cliente"
-                select
-                autoComplete="off"
-                value={filtrosAplicados.cliente_id}
-                onChange={(e) =>
-                  handleFiltroChange("cliente_id", e.target.value)
-                }
-                sx={{
-                  width: "100%",
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "#e0e0e0",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#a3cb39",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#a3cb39",
-                      borderWidth: "2px",
-                    },
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#a3cb39",
-                  },
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-                SelectProps={{
-                  MenuProps: {
-                    PaperProps: {
-                      style: {
-                        maxHeight: 250,
-                      },
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="">
-                  <em>Todos os clientes</em>
-                </MenuItem>
-                {clientes.map((cliente) => (
-                  <MenuItem
-                    key={cliente.id}
-                    value={cliente.id}
+                options={clientes}
+                getOptionLabel={(option) => option.nome || ""}
+                value={clientes.find(c => c.id === filtrosAplicados.cliente_id) || null}
+                onInputChange={(e, val) => setInputCliente(val)}
+                onChange={(e, val) => handleFiltroChange("cliente_id", val?.id || "")}
+                loading={loadingClientesFiltro}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Cliente"
+                    placeholder="Digite para buscar..."
                     sx={{
-                      "&:hover": {
-                        backgroundColor: "rgba(163, 203, 57, 0.1)",
+                      width: "100%",
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#a3cb39" },
+                        "&.Mui-focused fieldset": { borderColor: "#a3cb39", borderWidth: "2px" },
                       },
-                      "&.Mui-selected": {
-                        backgroundColor: "rgba(163, 203, 57, 0.2)",
-                        "&:hover": {
-                          backgroundColor: "rgba(163, 203, 57, 0.3)",
-                        },
-                      },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#a3cb39" },
                     }}
-                  >
-                    {cliente.nome}
-                  </MenuItem>
-                ))}
-              </TextField>
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <InputAdornment position="start">
+                            <Person fontSize="small" />
+                          </InputAdornment>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
 
-              {/* Categoria - Com MenuItem */}
-              <TextField
+              {/* Categoria - Com Autocomplete */}
+              <Autocomplete
                 fullWidth
-                variant="outlined"
                 size="small"
-                label="Categoria"
-                select
-                autoComplete="off"
-                value={filtrosAplicados.categoria_id}
-                onChange={(e) =>
-                  handleFiltroChange("categoria_id", e.target.value)
-                }
+                options={categorias}
+                getOptionLabel={(option) => option.nome || ""}
+                value={categorias.find(c => c.id === filtrosAplicados.categoria_id) || null}
+                onInputChange={(e, val) => setInputCategoria(val)}
+                onChange={(e, val) => handleFiltroChange("categoria_id", val?.id || "")}
+                loading={loadingCategoriasFiltro}
                 sx={{
                   width: { xs: "100%", sm: "48%", md: "48%", lg: "48%" },
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: "#e0e0e0",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#a3cb39",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#a3cb39",
-                      borderWidth: "2px",
-                    },
-                  },
-                  "& .MuiInputLabel-root.Mui-focused": {
-                    color: "#a3cb39",
-                  },
                 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Category fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-                SelectProps={{
-                  MenuProps: {
-                    PaperProps: {
-                      style: {
-                        maxHeight: 250,
-                      },
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="">
-                  <em>Todas as categorias</em>
-                </MenuItem>
-                {categorias.map((categoria) => (
-                  <MenuItem
-                    key={categoria.id}
-                    value={categoria.id}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Categoria"
+                    placeholder="Digite para buscar..."
                     sx={{
-                      "&:hover": {
-                        backgroundColor: "rgba(163, 203, 57, 0.1)",
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "#e0e0e0" },
+                        "&:hover fieldset": { borderColor: "#a3cb39" },
+                        "&.Mui-focused fieldset": { borderColor: "#a3cb39", borderWidth: "2px" },
                       },
-                      "&.Mui-selected": {
-                        backgroundColor: "rgba(163, 203, 57, 0.2)",
-                        "&:hover": {
-                          backgroundColor: "rgba(163, 203, 57, 0.3)",
-                        },
-                      },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#a3cb39" },
                     }}
-                  >
-                    {categoria.nome}
-                  </MenuItem>
-                ))}
-              </TextField>
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <InputAdornment position="start">
+                            <Category fontSize="small" />
+                          </InputAdornment>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
 
               {/* Status - Com MenuItem */}
               <TextField

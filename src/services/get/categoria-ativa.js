@@ -8,12 +8,12 @@ const getCookie = (name) => {
   return null;
 };
 
-export const buscarCategoriasAtivos = async () => {
+export const buscarCategoriasAtivos = async (search = "") => {
   const https = httpsInstance();
   const token = getCookie("auth_token");
 
   try {
-    const response = await https.get(`categorias?ativo=true`, {
+    const response = await https.get(`categorias?ativo=true&search=${search}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

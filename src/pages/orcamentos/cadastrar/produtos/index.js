@@ -73,12 +73,30 @@ const ProdutosOrcamento = ({
   const [itemPrincipalId, setItemPrincipalId] = useState("");
   const [produtosDisponiveis, setProdutosDisponiveis] = useState([]);
 
-  // Carregar produtos
+  const [inputValue, setInputValue] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const carregarProdutos = async (search = "") => {
+    setLoading(true);
+    try {
+      const response = await buscarProdutosAtivo(search);
+      if (response.success) {
+        setProdutosDisponiveis(response.data);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    buscarProdutosAtivo().then((response) => {
-      if (response.success) setProdutosDisponiveis(response.data);
-    });
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      carregarProdutos(inputValue);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputValue]);
 
   // Calcular subtotal do produto atual
   useEffect(() => {
@@ -476,13 +494,17 @@ const ProdutosOrcamento = ({
         <Autocomplete
           size="small"
           options={produtosDisponiveis}
+          loading={loading || loadingProdutos}
           getOptionLabel={(opt) => opt.nome || ""}
           value={
             produtosDisponiveis.find((p) => p.nome === produtoNome) || null
           }
           onChange={(e, v) => v && setProdutoNome(v.nome)}
           freeSolo
-          onInputChange={(e, val) => setProdutoNome(val)}
+          onInputChange={(e, val) => {
+            setProdutoNome(val);
+            setInputValue(val);
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
