@@ -1,5 +1,5 @@
 export const headerOrcamento = [
-  { key: "id", label: "Número" },
+  { key: "numero_orcamento", label: "Número" },
   { key: "cliente", label: "Cliente" },
   { key: "valor_total", label: "Valor Total" },
   { key: "status", label: "Status" },
