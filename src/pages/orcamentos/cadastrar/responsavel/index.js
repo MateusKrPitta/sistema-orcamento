@@ -27,7 +27,7 @@ const ResponsavelOrcamento = ({
       >
         <label className="text-sm font-bold flex items-center gap-2 text-black mb-2 pb-2">
           <Work style={{ color: "#a3cb39" }} />
-          Responsável
+          Solicitante
         </label>
         <div className="flex w-full items-center gap-3 flex-wrap">
           <TextField

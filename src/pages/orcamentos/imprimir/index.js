@@ -40,6 +40,7 @@ const ImprimirOrcamento = ({ dadosOrcamento, open, onClose }) => {
       pix: "PIX",
       cheque: "Cheque",
       a_combinar: "A Combinar",
+      deposito_bancario: "Depósito Bancário",
     };
     return formasPagamento[tipo] || tipo;
   };
@@ -265,7 +266,7 @@ const ImprimirOrcamento = ({ dadosOrcamento, open, onClose }) => {
                 <div className="flex flex-col gap-3 w-[48%]">
                   <div className="flex flex-col gap-1">
                     <label className="text-black text-xs font-bold mb-1">
-                      RESPONSÁVEL:
+                      SOLICITANTE:
                     </label>
                     <label className="text-black text-sm">
                       {dadosOrcamento.responsavel?.nome}
@@ -299,6 +300,10 @@ const ImprimirOrcamento = ({ dadosOrcamento, open, onClose }) => {
                     {getFormaPagamentoTexto(
                       dadosOrcamento.forma_pagamento?.tipo,
                     )}
+                    {dadosOrcamento.forma_pagamento?.tipo === "deposito_bancario" &&
+                      dadosOrcamento.forma_pagamento?.numero_conta && (
+                        <span> - Conta: {dadosOrcamento.forma_pagamento.numero_conta}</span>
+                      )}
                   </label>
                 </div>
 

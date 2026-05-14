@@ -65,6 +65,25 @@ const CadastrarOrcamento = ({ onSuccess }) => {
   const [loadingProdutos, setLoadingProdutos] = useState(false);
   const [cadastro, setCadastro] = useState(false);
 
+  useEffect(() => {
+    if (statusSelecionado === "em_andamento" && validade) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      const [ano, mes, dia] = validade.split('-');
+      if (ano && mes && dia) {
+        const dataValidade = new Date(ano, mes - 1, dia);
+        if (dataValidade < hoje) {
+          setStatusSelecionado("pendente_ligacao");
+          CustomToast({
+            type: "info",
+            message: "O status foi alterado para Pendente pois a validade foi ultrapassada.",
+          });
+        }
+      }
+    }
+  }, [validade, statusSelecionado]);
+
   const ModalCadastro = () => {
     setCadastro(true);
   };

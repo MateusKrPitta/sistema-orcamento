@@ -208,6 +208,25 @@ const EditarOrcamento = ({
     }
   }, [dadosOrcamento, open]);
 
+  useEffect(() => {
+    if (statusSelecionado === "em_andamento" && validade) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
+      const [ano, mes, dia] = validade.split('-');
+      if (ano && mes && dia) {
+        const dataValidade = new Date(ano, mes - 1, dia);
+        if (dataValidade < hoje) {
+          setStatusSelecionado("pendente_ligacao");
+          CustomToast({
+            type: "info",
+            message: "O status foi alterado para Pendente pois a validade foi ultrapassada.",
+          });
+        }
+      }
+    }
+  }, [validade, statusSelecionado]);
+
   const inicializarDados = () => {
     if (!dadosOrcamento) return;
 
@@ -1113,7 +1132,7 @@ const EditarOrcamento = ({
                 >
                   <label className="text-sm font-bold flex items-center gap-2 text-black mb-2 pb-2">
                     <Work style={{ color: "#a3cb39" }} />
-                    Responsável
+                    Solicitante
                   </label>
                   <div className="flex w-full items-center gap-3 flex-wrap">
                     <TextField
