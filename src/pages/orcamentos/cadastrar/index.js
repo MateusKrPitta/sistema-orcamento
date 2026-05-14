@@ -55,6 +55,8 @@ const CadastrarOrcamento = ({ onSuccess }) => {
   const [tipoPagamento, setTipoPagamento] = useState("");
   const [prazoEntrega, setPrazoEntrega] = useState("");
   const [observacoesPagamento, setObservacoesPagamento] = useState("");
+  const [dataPagamento, setDataPagamento] = useState("");
+  const [numeroConta, setNumeroConta] = useState("");
   const [tipoPagamentoErro, setTipoPagamentoErro] = useState(false);
 
   const [loadingCadastroCliente, setLoadingCadastroCliente] = useState(false);
@@ -110,6 +112,8 @@ const CadastrarOrcamento = ({ onSuccess }) => {
     setTipoPagamento("");
     setPrazoEntrega("");
     setObservacoesPagamento("");
+    setDataPagamento("");
+    setNumeroConta("");
     setTipoPagamentoErro(false);
   };
 
@@ -238,6 +242,8 @@ const CadastrarOrcamento = ({ onSuccess }) => {
       forma_pagamento_tipo: tipoPagamento,
       prazo_entrega: prazoEntrega ? `${prazoEntrega}T18:00:00` : "",
       forma_pagamento_observacoes: observacoesPagamento || "",
+      data_pagamento: dataPagamento ? `${dataPagamento}T12:00:00` : "",
+      numero_conta: numeroConta || "",
       desconto: parseFloat(desconto) || 0,
       imposto: parseFloat(imposto) || 0,
       frete: parseFloat(frete) || 0,
@@ -342,6 +348,10 @@ const CadastrarOrcamento = ({ onSuccess }) => {
                 observacoesPagamento={observacoesPagamento}
                 setObservacoesPagamento={setObservacoesPagamento}
                 tipoPagamentoErro={tipoPagamentoErro}
+                dataPagamento={dataPagamento}
+                setDataPagamento={setDataPagamento}
+                numeroConta={numeroConta}
+                setNumeroConta={setNumeroConta}
               />
 
               <ProdutosOrcamento

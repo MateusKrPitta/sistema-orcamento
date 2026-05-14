@@ -15,6 +15,10 @@ const FormasPagamentoOrcamento = ({
   observacoesPagamento,
   setObservacoesPagamento,
   tipoPagamentoErro,
+  dataPagamento,
+  setDataPagamento,
+  numeroConta,
+  setNumeroConta,
 }) => {
   return (
     <div
@@ -28,7 +32,7 @@ const FormasPagamentoOrcamento = ({
       <div className="flex w-full items-center gap-3 flex-wrap">
         <FormControl
           sx={{
-            width: { xs: "72%", sm: "50%", md: "40%", lg: "62%" },
+            width: { xs: "72%", sm: "50%", md: "40%", lg: "48%" },
           }}
           size="small"
         >
@@ -56,8 +60,53 @@ const FormasPagamentoOrcamento = ({
             <MenuItem value="cartao_credito">Cartão de Crédito</MenuItem>
             <MenuItem value="cartao_debito">Cartão de Débito</MenuItem>
             <MenuItem value="pix">PIX</MenuItem>
+            <MenuItem value="transferencia">Transferência</MenuItem>
+            <MenuItem value="deposito_bancario">Depósito Bancário</MenuItem>
           </TextField>
         </FormControl>
+
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          type="date"
+          label="Data Pagamento"
+          value={dataPagamento}
+          sx={{
+            width: { xs: "72%", sm: "50%", md: "40%", lg: "48%" },
+          }}
+          onChange={(e) => setDataPagamento(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <CalendarToday />
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        {tipoPagamento === "deposito_bancario" && (
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
+            label="Número da Conta"
+            value={numeroConta}
+            sx={{
+              width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
+            }}
+            onChange={(e) => setNumeroConta(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Article />
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
 
         <TextField
           fullWidth
@@ -67,7 +116,7 @@ const FormasPagamentoOrcamento = ({
           label="Prazo de Entrega"
           value={prazoEntrega}
           sx={{
-            width: { xs: "72%", sm: "50%", md: "40%", lg: "35%" },
+            width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
           }}
           onChange={(e) => setPrazoEntrega(e.target.value)}
           InputLabelProps={{ shrink: true }}

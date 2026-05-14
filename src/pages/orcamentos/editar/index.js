@@ -97,6 +97,8 @@ const EditarOrcamento = ({
   const [produtos, setProdutos] = useState([]);
   const [tipoPagamento, setTipoPagamento] = useState("");
   const [prazoEntrega, setPrazoEntrega] = useState("");
+  const [dataPagamento, setDataPagamento] = useState("");
+  const [numeroConta, setNumeroConta] = useState("");
 
   const [descontoFormatado, setDescontoFormatado] = useState("");
   const [impostoFormatado, setImpostoFormatado] = useState("");
@@ -319,6 +321,10 @@ const EditarOrcamento = ({
       formatDateForInput(dadosOrcamento.forma_pagamento?.prazo_entrega) || "",
     );
     setObservacoesPagamento(dadosOrcamento.forma_pagamento?.observacoes || "");
+    setDataPagamento(
+      formatDateForInput(dadosOrcamento.forma_pagamento?.data_pagamento) || "",
+    );
+    setNumeroConta(dadosOrcamento.forma_pagamento?.numero_conta || "");
 
     if (dadosOrcamento.cliente?.id) {
       setClienteId(dadosOrcamento.cliente.id);
@@ -729,6 +735,8 @@ const EditarOrcamento = ({
       forma_pagamento_tipo: tipoPagamento,
       prazo_entrega: prazoEntrega ? `${prazoEntrega}T18:00:00` : "",
       forma_pagamento_observacoes: observacoesPagamento || "",
+      data_pagamento: dataPagamento ? `${dataPagamento}T12:00:00` : "",
+      numero_conta: numeroConta || "",
       desconto: parseFloat(desconto) || 0,
       imposto: parseFloat(imposto) || 0,
       frete: parseFloat(frete) || 0,
@@ -1182,7 +1190,7 @@ const EditarOrcamento = ({
                   <div className="flex w-full items-center gap-3 flex-wrap">
                     <FormControl
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "62%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "48%" },
                       }}
                       size="small"
                     >
@@ -1219,8 +1227,55 @@ const EditarOrcamento = ({
                           Cartão de Débito
                         </MenuItem>
                         <MenuItem value="pix">PIX</MenuItem>
+                        <MenuItem value="transferencia">Transferência</MenuItem>
+                        <MenuItem value="deposito_bancario">
+                          Depósito Bancário
+                        </MenuItem>
                       </TextField>
                     </FormControl>
+
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      type="date"
+                      label="Data Pagamento"
+                      value={dataPagamento}
+                      sx={{
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "48%" },
+                      }}
+                      onChange={(e) => setDataPagamento(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <CalendarToday />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+
+                    {tipoPagamento === "deposito_bancario" && (
+                      <TextField
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        label="Número da Conta"
+                        value={numeroConta}
+                        sx={{
+                          width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
+                        }}
+                        onChange={(e) => setNumeroConta(e.target.value)}
+                        InputLabelProps={{ shrink: true }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Article />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
 
                     <TextField
                       fullWidth
@@ -1230,7 +1285,7 @@ const EditarOrcamento = ({
                       label="Prazo de Entrega"
                       value={prazoEntrega}
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "35%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
                       }}
                       onChange={(e) => setPrazoEntrega(e.target.value)}
                       InputLabelProps={{ shrink: true }}
