@@ -308,7 +308,7 @@ const CadastrarOrcamento = ({ onSuccess }) => {
       >
         <div className="overflow-y-auto overflow-x-hidden ">
           <div className="flex items-start gap-2 w-full flex-wrap">
-            <div className="mt-4 flex gap-3 flex-wrap w-[100%] items-start ">
+            <div className=" flex gap-3 flex-wrap w-[100%] items-start ">
               <InformacoesGerais
                 dataEmissao={dataEmissao}
                 setDataEmissao={setDataEmissao}

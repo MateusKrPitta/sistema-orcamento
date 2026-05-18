@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "https://api-orcamento-production.up.railway.app";
+const API_URL = process.env.REACT_APP_API_URL || "https://api-orcamento-production.up.railway.app";
 
 const httpsInstance = () => {
   const httpsAuthenticated = axios.create({

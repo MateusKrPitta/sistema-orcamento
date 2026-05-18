@@ -829,7 +829,7 @@ const EditarOrcamento = ({
       icon={<Edit />}
       tamanhoTitulo="70%"
       conteudo={
-        <div className="overflow-y-auto overflow-x-hidden max-h-[700px]">
+        <div>
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <CircularProgress />
@@ -841,7 +841,7 @@ const EditarOrcamento = ({
           ) : (
             <div className="flex items-start gap-2 w-full flex-wrap">
               {/* Informações Gerais */}
-              <div className="mt-4 flex gap-3 flex-wrap w-[50%] items-start">
+              <div className=" flex gap-3 flex-wrap w-[50%] items-start">
                 <div
                   className="flex flex-col w-full p-2"
                   style={{ border: "1px solid #a3cb39", borderRadius: "10px" }}
@@ -858,7 +858,7 @@ const EditarOrcamento = ({
                       label="Número Orçamento"
                       value={numeroOrcamento}
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "35%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
                       }}
                       InputLabelProps={{ shrink: true }}
                       InputProps={{
@@ -949,7 +949,7 @@ const EditarOrcamento = ({
                       value={statusSelecionado}
                       onChange={(e) => setStatusSelecionado(e.target.value)}
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "49%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
                       }}
                       InputLabelProps={{ shrink: true }}
                       InputProps={{
@@ -997,7 +997,7 @@ const EditarOrcamento = ({
                         />
                       )}
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "49%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
                       }}
                     />
                   </div>
@@ -1149,7 +1149,7 @@ const EditarOrcamento = ({
               </div>
 
               {/* Responsável e Forma de Pagamento */}
-              <div className="mt-4 flex gap-3 flex-wrap w-[49%] items-start">
+              <div className=" flex gap-3 flex-wrap w-[49%] items-start">
                 <div
                   className="flex flex-col w-full p-2"
                   style={{ border: "1px solid #a3cb39", borderRadius: "10px" }}
