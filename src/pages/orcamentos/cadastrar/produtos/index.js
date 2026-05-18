@@ -9,6 +9,7 @@ import {
   SubdirectoryArrowRight,
   Category,
   ListAlt,
+  Edit,
 } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -187,6 +188,7 @@ const ProdutosOrcamento = ({
     }
 
     setProdutoNome("");
+    setInputValue("");
     setProdutoQuantidade("");
     setProdutoPrecoFormatado("");
     setProdutoSubTotalFormatado("");
@@ -216,6 +218,7 @@ const ProdutosOrcamento = ({
   const cancelarEdicao = () => {
     setEditandoId(null);
     setProdutoNome("");
+    setInputValue("");
     setProdutoQuantidade("");
     setProdutoPrecoFormatado("");
     setProdutoSubTotalFormatado("");
@@ -284,7 +287,7 @@ const ProdutosOrcamento = ({
                         onClick={() => editarProduto(item)}
                         sx={{ color: "#a3cb39" }}
                       >
-                        <Save fontSize="small" />
+                        <Edit fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
@@ -335,7 +338,7 @@ const ProdutosOrcamento = ({
                           onClick={() => editarProduto(subItem)}
                           sx={{ color: "#a3cb39" }}
                         >
-                          <Save fontSize="small" />
+                          <Edit fontSize="small" />
                         </IconButton>
                         <IconButton
                           size="small"
@@ -404,7 +407,7 @@ const ProdutosOrcamento = ({
                       onClick={() => editarProduto(item)}
                       sx={{ color: "#a3cb39" }}
                     >
-                      <Save fontSize="small" />
+                      <Edit fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
@@ -495,11 +498,18 @@ const ProdutosOrcamento = ({
           size="small"
           options={produtosDisponiveis}
           loading={loading || loadingProdutos}
-          getOptionLabel={(opt) => opt.nome || ""}
-          value={
-            produtosDisponiveis.find((p) => p.nome === produtoNome) || null
-          }
-          onChange={(e, v) => v && setProdutoNome(v.nome)}
+          getOptionLabel={(opt) => (typeof opt === "string" ? opt : opt.nome || "")}
+          value={produtoNome ? { nome: produtoNome } : null}
+          inputValue={inputValue}
+          onChange={(e, v) => {
+            if (typeof v === "string") {
+              setProdutoNome(v);
+            } else if (v && v.nome) {
+              setProdutoNome(v.nome);
+            } else {
+              setProdutoNome("");
+            }
+          }}
           freeSolo
           onInputChange={(e, val) => {
             setProdutoNome(val);

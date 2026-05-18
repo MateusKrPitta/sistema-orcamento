@@ -4,6 +4,7 @@ import {
   CalendarToday,
   Category,
   DateRange,
+  Business,
 } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -28,6 +29,8 @@ const InformacoesGerais = ({
   validadeErro,
   loadingCategorias,
   setCategorias,
+  setor,
+  setSetor,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,13 +71,31 @@ const InformacoesGerais = ({
             fullWidth
             variant="outlined"
             size="small"
+            label="Setor"
+            value={setor}
+            onChange={(e) => setSetor(e.target.value)}
+            sx={{
+              width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Business />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <TextField
+            fullWidth
+            variant="outlined"
+            size="small"
             label="Data Emissão*"
             type="date"
             value={dataEmissao}
             error={dataEmissaoErro}
             helperText={dataEmissaoErro ? "Campo obrigatório" : ""}
             sx={{
-              width: { xs: "72%", sm: "50%", md: "40%", lg: "35%" },
+              width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
             }}
             onChange={(e) => {
               setDataEmissao(e.target.value);
@@ -99,7 +120,7 @@ const InformacoesGerais = ({
             error={validadeErro}
             helperText={validadeErro ? "Campo obrigatório" : ""}
             sx={{
-              width: { xs: "72%", sm: "50%", md: "40%", lg: "37%" },
+              width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
             }}
             onChange={(e) => {
               setValidade(e.target.value);

@@ -41,6 +41,7 @@ import {
   AddCircle,
   SubdirectoryArrowRight,
   ListAlt,
+  Business,
 } from "@mui/icons-material";
 import ModalLateral from "../../../components/modal-lateral";
 import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
@@ -99,6 +100,7 @@ const EditarOrcamento = ({
   const [prazoEntrega, setPrazoEntrega] = useState("");
   const [dataPagamento, setDataPagamento] = useState("");
   const [numeroConta, setNumeroConta] = useState("");
+  const [setor, setSetor] = useState("");
 
   const [descontoFormatado, setDescontoFormatado] = useState("");
   const [impostoFormatado, setImpostoFormatado] = useState("");
@@ -344,6 +346,7 @@ const EditarOrcamento = ({
       formatDateForInput(dadosOrcamento.forma_pagamento?.data_pagamento) || "",
     );
     setNumeroConta(dadosOrcamento.forma_pagamento?.numero_conta || "");
+    setSetor(dadosOrcamento.setor || "");
 
     if (dadosOrcamento.cliente?.id) {
       setClienteId(dadosOrcamento.cliente.id);
@@ -537,6 +540,7 @@ const EditarOrcamento = ({
 
     // Limpar campos
     setProdutoNome("");
+    setInputProduto("");
     setProdutoQuantidade("");
     setProdutoPrecoFormatado("");
     setProdutoSubTotalFormatado("");
@@ -559,6 +563,7 @@ const EditarOrcamento = ({
     setEditandoProdutoId(null);
     setProdutoEmEdicao(null);
     setProdutoNome("");
+    setInputProduto("");
     setProdutoQuantidade("");
     setProdutoPrecoFormatado("");
     setProdutoSubTotalFormatado("");
@@ -756,6 +761,7 @@ const EditarOrcamento = ({
       forma_pagamento_observacoes: observacoesPagamento || "",
       data_pagamento: dataPagamento ? `${dataPagamento}T12:00:00` : "",
       numero_conta: numeroConta || "",
+      setor: setor || "",
       desconto: parseFloat(desconto) || 0,
       imposto: parseFloat(imposto) || 0,
       frete: parseFloat(frete) || 0,
@@ -868,13 +874,31 @@ const EditarOrcamento = ({
                       fullWidth
                       variant="outlined"
                       size="small"
+                      label="Setor"
+                      value={setor}
+                      onChange={(e) => setSetor(e.target.value)}
+                      sx={{
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Business />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      size="small"
                       label="Data Emissão*"
                       type="date"
                       value={dataEmissao}
                       error={dataEmissaoErro}
                       helperText={dataEmissaoErro ? "Campo obrigatório" : ""}
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "37%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
                       }}
                       onChange={(e) => {
                         setDataEmissao(e.target.value);
@@ -889,6 +913,32 @@ const EditarOrcamento = ({
                         ),
                       }}
                       required
+                    />
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      type="date"
+                      size="small"
+                      label="Validade*"
+                      value={validade}
+                      error={validadeErro}
+                      helperText={validadeErro ? "Campo obrigatório" : ""}
+                      sx={{
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "32%" },
+                      }}
+                      onChange={(e) => {
+                        setValidade(e.target.value);
+                        validarCampo("validade", e.target.value);
+                      }}
+                      required
+                      InputLabelProps={{ shrink: true }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <DateRange />
+                          </InputAdornment>
+                        ),
+                      }}
                     />
                     <TextField
                       fullWidth
@@ -919,32 +969,6 @@ const EditarOrcamento = ({
                       </MenuItem>
                       <MenuItem value="em_andamento">Em Andamento</MenuItem>
                     </TextField>
-                    <TextField
-                      fullWidth
-                      variant="outlined"
-                      type="date"
-                      size="small"
-                      label="Validade*"
-                      value={validade}
-                      error={validadeErro}
-                      helperText={validadeErro ? "Campo obrigatório" : ""}
-                      sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "49%" },
-                      }}
-                      onChange={(e) => {
-                        setValidade(e.target.value);
-                        validarCampo("validade", e.target.value);
-                      }}
-                      required
-                      InputLabelProps={{ shrink: true }}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <DateRange />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
                     <Autocomplete
                       size="small"
                       options={categorias}
@@ -973,7 +997,7 @@ const EditarOrcamento = ({
                         />
                       )}
                       sx={{
-                        width: { xs: "72%", sm: "50%", md: "40%", lg: "100%" },
+                        width: { xs: "72%", sm: "50%", md: "40%", lg: "49%" },
                       }}
                     />
                   </div>
@@ -1403,8 +1427,9 @@ const EditarOrcamento = ({
                     size="small"
                     options={produtosDisponiveis}
                     loading={loadingProdutosSearch || loadingProdutos}
-                    getOptionLabel={(option) => option.nome || ""}
+                    getOptionLabel={(option) => (typeof option === "string" ? option : option.nome || "")}
                     value={produtoNome ? { nome: produtoNome } : null}
+                    inputValue={inputProduto}
                     onChange={handleProdutoSelecionado}
                     freeSolo
                     onInputChange={(event, newInputValue) => {
@@ -1616,7 +1641,7 @@ const EditarOrcamento = ({
                                       onClick={() => editarProduto(item)}
                                       sx={{ color: "#a3cb39" }}
                                     >
-                                      <Save fontSize="small" />
+                                      <Edit fontSize="small" />
                                     </IconButton>
                                     <IconButton
                                       size="small"
@@ -1687,7 +1712,7 @@ const EditarOrcamento = ({
                                         onClick={() => editarProduto(subItem)}
                                         sx={{ color: "#a3cb39" }}
                                       >
-                                        <Save fontSize="small" />
+                                        <Edit fontSize="small" />
                                       </IconButton>
                                       <IconButton
                                         size="small"
@@ -1764,7 +1789,7 @@ const EditarOrcamento = ({
                                     onClick={() => editarProduto(item)}
                                     sx={{ color: "#a3cb39" }}
                                   >
-                                    <Save fontSize="small" />
+                                    <Edit fontSize="small" />
                                   </IconButton>
                                   <IconButton
                                     size="small"

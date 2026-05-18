@@ -5,6 +5,7 @@ export const cadastrosOrcamentos = (orcamentos) => {
       orcamento.cliente?.nome ||
       orcamento.cliente_nome ||
       "Cliente não informado",
+    setor: orcamento.setor || "Não informado",
     valor_total: formatarValor(orcamento.valor_total),
     status: formatarStatus(orcamento.status),
     categoria: orcamento.categoria,

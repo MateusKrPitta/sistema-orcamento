@@ -20,6 +20,7 @@ const CadastrarOrcamento = ({ onSuccess }) => {
   const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
   const [dataEmissaoErro, setDataEmissaoErro] = useState(false);
   const [validadeErro, setValidadeErro] = useState(false);
+  const [setor, setSetor] = useState("");
 
   const [nomeCliente, setNomeCliente] = useState("");
   const [telefoneCliente, setTelefoneCliente] = useState("");
@@ -98,6 +99,7 @@ const CadastrarOrcamento = ({ onSuccess }) => {
     setValidade("");
     setStatusSelecionado("");
     setCategoriaSelecionada(null);
+    setSetor("");
     setDataEmissaoErro(false);
     setValidadeErro(false);
 
@@ -263,6 +265,7 @@ const CadastrarOrcamento = ({ onSuccess }) => {
       forma_pagamento_observacoes: observacoesPagamento || "",
       data_pagamento: dataPagamento ? `${dataPagamento}T12:00:00` : "",
       numero_conta: numeroConta || "",
+      setor: setor || "",
       desconto: parseFloat(desconto) || 0,
       imposto: parseFloat(imposto) || 0,
       frete: parseFloat(frete) || 0,
@@ -303,7 +306,7 @@ const CadastrarOrcamento = ({ onSuccess }) => {
         onClose={ModalFecha}
         title="Cadastrar Orçamento"
       >
-        <div className="overflow-y-auto overflow-x-hidden max-h-[700px]">
+        <div className="overflow-y-auto overflow-x-hidden ">
           <div className="flex items-start gap-2 w-full flex-wrap">
             <div className="mt-4 flex gap-3 flex-wrap w-[100%] items-start ">
               <InformacoesGerais
@@ -320,6 +323,8 @@ const CadastrarOrcamento = ({ onSuccess }) => {
                 setCategorias={setCategorias}
                 validadeErro={validadeErro}
                 loadingCategorias={loadingCategorias}
+                setor={setor}
+                setSetor={setSetor}
               />
 
               <ResponsavelOrcamento
