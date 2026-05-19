@@ -372,10 +372,10 @@ const ImprimirOrcamento = ({ dadosOrcamento, open, onClose }) => {
                           {parseFloat(item.quantidade).toFixed(2)}
                         </td>
                         <td className="border border-gray-300 p-2 text-right">
-                          {formatarMoeda(parseFloat(item.preco_unitario))}
+                          {item.tipo === "subitem" ? "-" : formatarMoeda(parseFloat(item.preco_unitario))}
                         </td>
                         <td className="border border-gray-300 p-2 text-right">
-                          {formatarMoeda(parseFloat(item.subtotal))}
+                          {item.tipo === "subitem" ? "-" : formatarMoeda(parseFloat(item.subtotal))}
                         </td>
                       </tr>
                     ))}

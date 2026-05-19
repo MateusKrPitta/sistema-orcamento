@@ -457,8 +457,8 @@ const EditarOrcamento = ({
       return;
     }
 
-    // Só valida preço se NÃO for item principal
-    if (tipoItem !== "principal") {
+    // Só valida preço se NÃO for subitem
+    if (tipoItem !== "subitem") {
       if (!produtoPrecoFormatado) {
         CustomToast({
           type: "warning",
@@ -477,9 +477,9 @@ const EditarOrcamento = ({
     }
 
     const quantidade = parseFloat(produtoQuantidade);
-    // Se for principal, preço = 0, senão pega o valor digitado
+    // Se for subitem, preço = 0, senão pega o valor digitado
     const preco =
-      tipoItem === "principal" ? 0 : parseValor(produtoPrecoFormatado) || 0;
+      tipoItem === "subitem" ? 0 : parseValor(produtoPrecoFormatado) || 0;
     const subTotalCalculado = quantidade * preco;
     const nomeProdutoFormatado = produtoNome.trim();
 
@@ -1488,7 +1488,7 @@ const EditarOrcamento = ({
                       width: { xs: "72%", sm: "50%", md: "40%", lg: "20%" },
                     }}
                     onChange={(e) => handlePrecoChange(e.target.value)}
-                    disabled={tipoItem === "principal"} // ← ADICIONE ESTA LINHA
+                    disabled={tipoItem === "subitem"} // ← ADICIONE ESTA LINHA
                     InputLabelProps={{ shrink: true }}
                     InputProps={{
                       startAdornment: (
@@ -1497,7 +1497,7 @@ const EditarOrcamento = ({
                         </InputAdornment>
                       ),
                     }}
-                    required={tipoItem !== "principal"} // ← OPCIONAL: tira o required visual
+                    required={tipoItem !== "subitem"} // ← OPCIONAL: tira o required visual
                   />
                   <TextField
                     fullWidth
@@ -1634,7 +1634,15 @@ const EditarOrcamento = ({
                                     size="small"
                                     variant="outlined"
                                   />
-                                 
+                                  <Typography variant="body2">
+                                    R$ {formatarValor(item.preco)}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight="bold"
+                                  >
+                                    R$ {formatarValor(item.subTotal)}
+                                  </Typography>
                                   <Box>
                                     <IconButton
                                       size="small"
@@ -1697,15 +1705,6 @@ const EditarOrcamento = ({
                                       size="small"
                                       variant="outlined"
                                     />
-                                    <Typography variant="body2">
-                                      R$ {formatarValor(subItem.preco)}
-                                    </Typography>
-                                    <Typography
-                                      variant="body2"
-                                      fontWeight="bold"
-                                    >
-                                      R$ {formatarValor(subItem.subTotal)}
-                                    </Typography>
                                     <Box>
                                       <IconButton
                                         size="small"

@@ -135,8 +135,8 @@ const ProdutosOrcamento = ({
       return;
     }
 
-    // Só valida preço se NÃO for item principal
-    if (tipoItem !== "principal") {
+    // Só valida preço se NÃO for subitem
+    if (tipoItem !== "subitem") {
       if (!produtoPrecoFormatado) {
         CustomToast({ type: "warning", message: "Preço é obrigatório" });
         return;
@@ -150,7 +150,7 @@ const ProdutosOrcamento = ({
 
     const quantidade = parseFloat(produtoQuantidade);
     const preco =
-      tipoItem === "principal" ? 0 : parseValor(produtoPrecoFormatado) || 0;
+      tipoItem === "subitem" ? 0 : parseValor(produtoPrecoFormatado) || 0;
     const subTotal = quantidade * preco;
 
     const existe = produtosDisponiveis.some(
@@ -280,6 +280,12 @@ const ProdutosOrcamento = ({
                       size="small"
                       variant="outlined"
                     />
+                    <Typography variant="body2">
+                      R$ {formatarValor(item.preco)}
+                    </Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      R$ {formatarValor(item.subTotal)}
+                    </Typography>
 
                     <Box>
                       <IconButton
@@ -326,12 +332,6 @@ const ProdutosOrcamento = ({
                         size="small"
                         variant="outlined"
                       />
-                      <Typography variant="body2">
-                        R$ {formatarValor(subItem.preco)}
-                      </Typography>
-                      <Typography variant="body2" fontWeight="bold">
-                        R$ {formatarValor(subItem.subTotal)}
-                      </Typography>
                       <Box>
                         <IconButton
                           size="small"
@@ -555,7 +555,7 @@ const ProdutosOrcamento = ({
           onChange={(e) =>
             setProdutoPrecoFormatado(mascaraValorInput(e.target.value))
           }
-          disabled={tipoItem === "principal"} // ← Desabilita para itens principais
+          disabled={tipoItem === "subitem"} // ← Desabilita para subitens
           sx={{ width: 150 }}
           InputProps={{
             startAdornment: (
