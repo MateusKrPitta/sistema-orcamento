@@ -4,10 +4,32 @@ import ButtonComponent from "../../button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Category, ProductionQuantityLimits } from "@mui/icons-material";
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
+const getUserData = () => {
+  try {
+    const userDataStr = getCookie("user_data");
+    if (userDataStr) {
+      return JSON.parse(decodeURIComponent(userDataStr));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return null;
+};
+
 const HeaderCadastro = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeSection, setActiveSection] = useState("");
+
+  const userData = getUserData();
+  const isAdmin = userData?.role === "admin";
 
   useEffect(() => {
     const path = location.pathname.split("/cadastro/")[1];
@@ -34,18 +56,20 @@ const HeaderCadastro = () => {
 
   return (
     <div className="w-[100%] items-center justify-center flex flex-wrap gap-1 lg:justify-start md:gap-1 mb-2 md:h-ss">
-      <ButtonComponent
-        id="elemento1"
-        startIcon={<AccountCircleIcon fontSize="small" />}
-        title="Usuário"
-        subtitle={"Usuário"}
-        buttonSize="large"
-        onClick={() => handleNavigation("usuario")}
-        isActive={activeSection === "usuario"}
-        className={`sm:w-[25%] md:w-[25%] lg:w-[100%] text-xs text-black border border-black ${
-          activeSection === "usuario" ? "bg-primary text-black" : ""
-        }`}
-      />
+      {isAdmin && (
+        <ButtonComponent
+          id="elemento1"
+          startIcon={<AccountCircleIcon fontSize="small" />}
+          title="Usuário"
+          subtitle={"Usuário"}
+          buttonSize="large"
+          onClick={() => handleNavigation("usuario")}
+          isActive={activeSection === "usuario"}
+          className={`sm:w-[25%] md:w-[25%] lg:w-[100%] text-xs text-black border border-black ${
+            activeSection === "usuario" ? "bg-primary text-black" : ""
+          }`}
+        />
+      )}
 
       <ButtonComponent
         id="elemento2"

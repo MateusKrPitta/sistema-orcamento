@@ -4,5 +4,6 @@ export const cadastrosUsuarios = (usuarios) => {
     nome: usuario.nome,
     email: usuario.email,
     ativo: usuario.ativo,
+    role: usuario.role,
   }));
 };

@@ -26,8 +26,10 @@ import ModalLateral from "../../../components/modal-lateral";
 import { buscarUsuarios } from "../../../services/get/usuarios";
 import { criarUsuario } from "../../../services/post/usuario";
 import { editarUsuario } from "../../../services/put/usuario";
+import { useNavigate } from "react-router-dom";
 
 const Usuario = () => {
+  const navigate = useNavigate();
   const [editar, setEditar] = useState(false);
   const [cadastro, setCadastro] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
@@ -156,9 +158,33 @@ const Usuario = () => {
     setTermoBusca(valor);
   };
 
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return null;
+  };
+
+  const getUserData = () => {
+    try {
+      const userDataStr = getCookie("user_data");
+      if (userDataStr) {
+        return JSON.parse(decodeURIComponent(userDataStr));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return null;
+  };
+
   useEffect(() => {
+    const userData = getUserData();
+    if (!userData || userData.role !== "admin") {
+      navigate("/dashboard");
+      return;
+    }
     ListaUsuarios();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="w-full flex min-h-screen bg-gray-50">
