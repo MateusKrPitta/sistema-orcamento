@@ -7,11 +7,34 @@ import { Person } from "@mui/icons-material";
 import CentralModal from "../../modal-central";
 import ButtonComponent from "../../button";
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
+const getUserData = () => {
+  try {
+    const userDataStr = getCookie("user_data");
+    if (userDataStr) {
+      return JSON.parse(decodeURIComponent(userDataStr));
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return null;
+};
+
 const HeaderPerfil = () => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [logout, setLogout] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const userData = getUserData();
+  const userName = userData?.nome || "Usuário";
+  const userRole = userData?.role === "admin" ? "Administrador" : "Funcionário";
 
   const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
@@ -97,8 +120,8 @@ const HeaderPerfil = () => {
         <div className="flex items-center justify-end lg:w-[160px] h-12 bg-cover bg-primary rounded-bl-lg">
           <div className="flex items-center mr-4">
             <IconButton onClick={handleMenuOpen} className="p-1">
-              <label className="text-xs text-white flex items-center gap-1 font-bold">
-                <Person fontSize="small" /> Administrador
+              <label className="text-xs text-white flex items-center gap-1 font-bold cursor-pointer">
+                <Person fontSize="small" /> {userName}
               </label>
             </IconButton>
           </div>
@@ -111,8 +134,8 @@ const HeaderPerfil = () => {
         onClose={handleMenuClose}
         className="p-4"
       >
-        <MenuItem title="Sair do sistema" className="flex items-center gap-2">
-          <span className="text-xs text-primary">Administrador</span>
+        <MenuItem title="Cargo do usuário" className="flex items-center gap-2 pointer-events-none">
+          <span className="text-xs text-primary font-semibold">{userRole}</span>
         </MenuItem>
         <MenuItem
           onClick={ModalLogout}

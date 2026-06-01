@@ -11,6 +11,7 @@ export const cadastrosOrcamentos = (orcamentos) => {
     categoria: orcamento.categoria,
     numero_orcamento: orcamento.numero,
     data_emissao: formatarData(orcamento.data_emissao),
+    responsavel: orcamento.responsavel?.nome || orcamento.responsavel || "-",
   }));
 };
 

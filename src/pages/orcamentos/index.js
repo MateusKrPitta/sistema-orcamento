@@ -35,6 +35,26 @@ import { buscarClientes } from "../../services/get/cliente";
 import { buscarCartegoria } from "../../services/get/categoria";
 import { buscarRelatorioOrcamentos } from "../../services/get/filtro-orcamento";
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
+const getUserRole = () => {
+  try {
+    const userDataStr = getCookie("user_data");
+    if (userDataStr) {
+      const userData = JSON.parse(decodeURIComponent(userDataStr));
+      return userData.role;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return "funcionario";
+};
+
 const Orcamentos = () => {
   const [editar, setEditar] = useState(false);
   const [filtro, setFiltro] = useState(false);
@@ -83,6 +103,17 @@ const Orcamentos = () => {
   const [inputCategoria, setInputCategoria] = useState("");
   const [loadingClientesFiltro, setLoadingClientesFiltro] = useState(false);
   const [loadingCategoriasFiltro, setLoadingCategoriasFiltro] = useState(false);
+
+  const headersTabela = React.useMemo(() => {
+    const role = getUserRole();
+    if (role === "admin") {
+      return [
+        ...headerOrcamento,
+        { key: "responsavel", label: "Responsável" },
+      ];
+    }
+    return headerOrcamento;
+  }, []);
 
   const carregarClientesFiltro = async (search = "") => {
     setLoadingClientesFiltro(true);
@@ -749,7 +780,7 @@ const Orcamentos = () => {
                 <div className="w-full flex-1 mt-2">
                   <TableComponent
                     showPagination={true}
-                    headers={headerOrcamento}
+                    headers={headersTabela}
                     rows={cadastrosOrcamentos(orcamentos)}
                     actionCalls={{
                       edit: (rowData) => handleEditarOrcamento(rowData.id),

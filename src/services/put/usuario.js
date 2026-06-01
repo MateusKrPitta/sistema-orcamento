@@ -8,7 +8,7 @@ const getCookie = (name) => {
   return null;
 };
 
-export const editarUsuario = async (id, nome, email, password) => {
+export const editarUsuario = async (id, nome, email, password, role) => {
   const https = httpsInstance();
   const token = getCookie("auth_token");
 
@@ -30,6 +30,7 @@ export const editarUsuario = async (id, nome, email, password) => {
         nome,
         email,
         password,
+        role,
       },
       {
         headers: {

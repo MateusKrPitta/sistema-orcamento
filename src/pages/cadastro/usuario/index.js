@@ -5,7 +5,7 @@ import HeaderPerfil from "../../../components/navbars/perfil";
 import { motion } from "framer-motion";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HeaderCadastro from "../../../components/navbars/cadastro";
-import { IconButton, InputAdornment, TextField } from "@mui/material";
+import { IconButton, InputAdornment, TextField, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 import {
   AddCircle,
   Edit,
@@ -41,6 +41,7 @@ const Usuario = () => {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("funcionario");
 
   const usuariosFiltrados = useMemo(() => {
     if (!termoBusca.trim()) return usuarios;
@@ -62,6 +63,7 @@ const Usuario = () => {
     setNome("");
     setPassword("");
     setEmail("");
+    setRole("funcionario");
   };
 
   const ModalEditar = (usuario) => {
@@ -69,6 +71,7 @@ const Usuario = () => {
     setNome(usuario.nome);
     setPassword(usuario.password || "");
     setEmail(usuario.email);
+    setRole(usuario.role || "funcionario");
     setEditar(true);
   };
 
@@ -77,6 +80,7 @@ const Usuario = () => {
     setNome("");
     setPassword("");
     setEmail("");
+    setRole("funcionario");
   };
 
   const handleClickShowPassword = () => {
@@ -107,7 +111,7 @@ const Usuario = () => {
   const CadastrarUsuario = async () => {
     setLoading(true);
     try {
-      const resultado = await criarUsuario(nome, email, password);
+      const resultado = await criarUsuario(nome, email, password, role);
 
       if (resultado && resultado.message) {
         ListaUsuarios();
@@ -129,8 +133,9 @@ const Usuario = () => {
       const resultado = await editarUsuario(
         usuarioEditando.id,
         nome,
+        email,
         password,
-        email
+        role
       );
 
       if (resultado && resultado.success) {
@@ -302,6 +307,18 @@ const Usuario = () => {
                   ),
                 }}
               />
+              <FormControl fullWidth variant="outlined" size="small" sx={{ width: { xs: "95%", sm: "95%", md: "40%", lg: "100%" } }}>
+                <InputLabel id="role-select-label">Perfil/Cargo*</InputLabel>
+                <Select
+                  labelId="role-select-label"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  label="Perfil/Cargo*"
+                >
+                  <MenuItem value="funcionario">Funcionário</MenuItem>
+                  <MenuItem value="admin">Administrador</MenuItem>
+                </Select>
+              </FormControl>
 
               <div className="w-[100%] mt-2 flex items-end justify-end">
                 <ButtonComponent
@@ -399,6 +416,18 @@ const Usuario = () => {
                     ),
                   }}
                 />
+                <FormControl fullWidth variant="outlined" size="small" sx={{ width: { xs: "95%", sm: "95%", md: "40%", lg: "100%" } }}>
+                  <InputLabel id="role-edit-select-label">Perfil/Cargo*</InputLabel>
+                  <Select
+                    labelId="role-edit-select-label"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    label="Perfil/Cargo*"
+                  >
+                    <MenuItem value="funcionario">Funcionário</MenuItem>
+                    <MenuItem value="admin">Administrador</MenuItem>
+                  </Select>
+                </FormControl>
 
                 <div className="w-[100%] mt-2 flex items-end justify-end">
                   <ButtonComponent

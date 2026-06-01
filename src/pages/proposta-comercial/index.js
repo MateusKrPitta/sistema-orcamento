@@ -37,6 +37,26 @@ import { buscarClientes } from "../../services/get/cliente";
 import { buscarUsuarios } from "../../services/get/usuarios";
 import { buscarCartegoria } from "../../services/get/categoria";
 
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
+const getUserRole = () => {
+  try {
+    const userDataStr = getCookie("user_data");
+    if (userDataStr) {
+      const userData = JSON.parse(decodeURIComponent(userDataStr));
+      return userData.role;
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  return "funcionario";
+};
+
 const PropostaComercial = () => {
   const [editar, setEditar] = useState(false);
   const [filtro, setFiltro] = useState(false);
@@ -55,6 +75,14 @@ const PropostaComercial = () => {
 
   const [paginaAtual, setPaginaAtual] = useState(0);
   const [limitePorPagina, setLimitePorPagina] = useState(10);
+
+  const headersTabela = React.useMemo(() => {
+    const role = getUserRole();
+    if (role === "admin") {
+      return headerProposta;
+    }
+    return headerProposta.filter(h => h.key !== "responsavel");
+  }, []);
 
   const [filtros, setFiltros] = useState({
     status: "",
@@ -492,7 +520,7 @@ const PropostaComercial = () => {
                   ) : (
                     <TableComponent
                       showPagination={true}
-                      headers={headerProposta}
+                      headers={headersTabela}
                       rows={cadastrosPropostas(propostas)}
                       actionCalls={{
                         edit: handleEditar,
@@ -573,7 +601,7 @@ const PropostaComercial = () => {
               {renderSelectClientes()}
 
               {/* Select de Responsáveis */}
-              {renderSelectResponsaveis()}
+              {getUserRole() === "admin" && renderSelectResponsaveis()}
 
               {/* Select de Categorias */}
               {renderSelectCategorias()}
