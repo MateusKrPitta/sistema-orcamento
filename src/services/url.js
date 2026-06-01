@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3333";
+const API_URL = "https://api-orcamento-production.up.railway.app";
 
 const httpsInstance = () => {
   const httpsAuthenticated = axios.create({
