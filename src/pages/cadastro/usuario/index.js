@@ -26,6 +26,8 @@ import ModalLateral from "../../../components/modal-lateral";
 import { buscarUsuarios } from "../../../services/get/usuarios";
 import { criarUsuario } from "../../../services/post/usuario";
 import { editarUsuario } from "../../../services/put/usuario";
+import { AtivarUsuario } from "../../../services/path/ativa-usuario";
+import { InativarUsuario } from "../../../services/path/inativa-usuario";
 import { useNavigate } from "react-router-dom";
 
 const Usuario = () => {
@@ -153,6 +155,26 @@ const Usuario = () => {
     }
   };
 
+  const handleToggleStatus = async (usuario) => {
+    setLoadingBusca(true);
+    try {
+      let resultado;
+      if (usuario.ativo) {
+        resultado = await InativarUsuario(usuario.id);
+      } else {
+        resultado = await AtivarUsuario(usuario.id);
+      }
+
+      if (resultado && resultado.success) {
+        ListaUsuarios();
+      }
+    } catch (error) {
+      console.error("Erro ao alterar status do usuário:", error);
+    } finally {
+      setLoadingBusca(false);
+    }
+  };
+
   const handleBuscaChange = (e) => {
     const valor = e.target.value;
     setTermoBusca(valor);
@@ -247,6 +269,7 @@ const Usuario = () => {
                     rows={cadastrosUsuarios(usuariosFiltrados)}
                     actionCalls={{
                       edit: ModalEditar,
+                      toggleStatus: handleToggleStatus,
                     }}
                   />
                 </div>
