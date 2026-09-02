@@ -1421,50 +1421,50 @@ const EditarOrcamento = ({
                 </Grid>
 
                 {/* Campos do produto */}
-                <div className="flex w-full items-center gap-3 flex-wrap mb-3">
-                  <Autocomplete
-                    size="small"
-                    options={produtosDisponiveis}
-                    loading={loadingProdutosSearch || loadingProdutos}
-                    getOptionLabel={(option) => (typeof option === "string" ? option : option.nome || "")}
-                    value={produtoNome ? { nome: produtoNome } : null}
-                    inputValue={inputProduto}
-                    onChange={handleProdutoSelecionado}
-                    freeSolo
-                    onInputChange={(event, newInputValue) => {
-                      setProdutoNome(newInputValue);
-                      setInputProduto(newInputValue);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Nome do Produto*"
-                        InputProps={{
-                          ...params.InputProps,
-                          startAdornment: (
-                            <>
-                              <InputAdornment position="start">
-                                <Article />
-                              </InputAdornment>
-                              {params.InputProps.startAdornment}
-                            </>
-                          ),
-                        }}
-                      />
-                    )}
-                    sx={{
-                      width: { xs: "72%", sm: "50%", md: "40%", lg: "25%" },
-                    }}
-                  />
+                <div className="flex flex-col md:flex-row w-full items-stretch md:items-center gap-3 mb-3">
+                  <div className="flex-1 min-w-[280px]">
+                    <Autocomplete
+                      fullWidth
+                      size="small"
+                      options={produtosDisponiveis}
+                      loading={loadingProdutosSearch || loadingProdutos}
+                      getOptionLabel={(option) => (typeof option === "string" ? option : option.nome || "")}
+                      value={produtoNome ? { nome: produtoNome } : null}
+                      inputValue={inputProduto}
+                      onChange={handleProdutoSelecionado}
+                      freeSolo
+                      onInputChange={(event, newInputValue) => {
+                        setProdutoNome(newInputValue);
+                        setInputProduto(newInputValue);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          fullWidth
+                          label="Nome do Produto*"
+                          InputProps={{
+                            ...params.InputProps,
+                            startAdornment: (
+                              <>
+                                <InputAdornment position="start">
+                                  <Article />
+                                </InputAdornment>
+                                {params.InputProps.startAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
                   <TextField
-                    fullWidth
                     variant="outlined"
                     size="small"
                     label="Quantidade*"
                     type="number"
                     value={produtoQuantidade}
                     sx={{
-                      width: { xs: "72%", sm: "50%", md: "40%", lg: "15%" },
+                      width: { xs: "100%", md: 120 },
                     }}
                     onChange={(e) => setProdutoQuantidade(e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -1478,16 +1478,15 @@ const EditarOrcamento = ({
                     required
                   />
                   <TextField
-                    fullWidth
                     variant="outlined"
                     size="small"
                     label="Preço Unitário*"
                     value={produtoPrecoFormatado}
                     sx={{
-                      width: { xs: "72%", sm: "50%", md: "40%", lg: "20%" },
+                      width: { xs: "100%", md: 150 },
                     }}
                     onChange={(e) => handlePrecoChange(e.target.value)}
-                    disabled={tipoItem === "subitem"} // ← ADICIONE ESTA LINHA
+                    disabled={tipoItem === "subitem"}
                     InputLabelProps={{ shrink: true }}
                     InputProps={{
                       startAdornment: (
@@ -1496,16 +1495,15 @@ const EditarOrcamento = ({
                         </InputAdornment>
                       ),
                     }}
-                    required={tipoItem !== "subitem"} // ← OPCIONAL: tira o required visual
+                    required={tipoItem !== "subitem"}
                   />
                   <TextField
-                    fullWidth
                     variant="outlined"
                     size="small"
                     label="Sub Total"
                     value={produtoSubTotalFormatado}
                     sx={{
-                      width: { xs: "72%", sm: "50%", md: "40%", lg: "20%" },
+                      width: { xs: "100%", md: 150 },
                     }}
                     InputLabelProps={{ shrink: true }}
                     InputProps={{
@@ -1517,6 +1515,7 @@ const EditarOrcamento = ({
                       readOnly: true,
                     }}
                   />
+                  <div className="flex items-center gap-1 self-end md:self-center">
                   <Tooltip
                     title={
                       cadastrandoProduto
@@ -1566,6 +1565,7 @@ const EditarOrcamento = ({
                       </IconButton>
                     </Tooltip>
                   )}
+                  </div>
                 </div>
 
                 {/* Lista de produtos */}

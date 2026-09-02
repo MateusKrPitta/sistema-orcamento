@@ -490,48 +490,54 @@ const ProdutosOrcamento = ({
       </Grid>
 
       <Stack
-        direction="row"
-        spacing={1}
-        sx={{ mb: 2, flexWrap: "wrap", gap: 1 }}
+        direction={{ xs: "column", md: "row" }}
+        spacing={1.5}
+        alignItems={{ xs: "stretch", md: "center" }}
+        sx={{ mb: 2, width: "100%" }}
       >
-        <Autocomplete
-          size="small"
-          options={produtosDisponiveis}
-          loading={loading || loadingProdutos}
-          getOptionLabel={(opt) => (typeof opt === "string" ? opt : opt.nome || "")}
-          value={produtoNome ? { nome: produtoNome } : null}
-          inputValue={inputValue}
-          onChange={(e, v) => {
-            if (typeof v === "string") {
-              setProdutoNome(v);
-            } else if (v && v.nome) {
-              setProdutoNome(v.nome);
-            } else {
-              setProdutoNome("");
+        <Box sx={{ flex: { xs: "1 1 100%", md: "1 1 auto" }, minWidth: { md: 280 } }}>
+          <Autocomplete
+            fullWidth
+            size="small"
+            options={produtosDisponiveis}
+            loading={loading || loadingProdutos}
+            getOptionLabel={(opt) =>
+              typeof opt === "string" ? opt : opt.nome || ""
             }
-          }}
-          freeSolo
-          onInputChange={(e, val) => {
-            setProdutoNome(val);
-            setInputValue(val);
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Produto*"
-              size="small"
-              sx={{ minWidth: 250 }}
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Article fontSize="small" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          )}
-        />
+            value={produtoNome ? { nome: produtoNome } : null}
+            inputValue={inputValue}
+            onChange={(e, v) => {
+              if (typeof v === "string") {
+                setProdutoNome(v);
+              } else if (v && v.nome) {
+                setProdutoNome(v.nome);
+              } else {
+                setProdutoNome("");
+              }
+            }}
+            freeSolo
+            onInputChange={(e, val) => {
+              setProdutoNome(val);
+              setInputValue(val);
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Nome do Produto*"
+                size="small"
+                fullWidth
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Article fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+          />
+        </Box>
 
         <TextField
           size="small"
@@ -539,7 +545,7 @@ const ProdutosOrcamento = ({
           type="number"
           value={produtoQuantidade}
           onChange={(e) => setProdutoQuantidade(e.target.value)}
-          sx={{ width: 120 }}
+          sx={{ width: { xs: "100%", sm: 120 } }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -548,15 +554,16 @@ const ProdutosOrcamento = ({
             ),
           }}
         />
+
         <TextField
           size="small"
-          label="Preço*"
+          label="Preço Unitário*"
           value={produtoPrecoFormatado}
           onChange={(e) =>
             setProdutoPrecoFormatado(mascaraValorInput(e.target.value))
           }
-          disabled={tipoItem === "subitem"} // ← Desabilita para subitens
-          sx={{ width: 150 }}
+          disabled={tipoItem === "subitem"}
+          sx={{ width: { xs: "100%", sm: 150 } }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -568,9 +575,9 @@ const ProdutosOrcamento = ({
 
         <TextField
           size="small"
-          label="Subtotal"
+          label="Sub Total"
           value={produtoSubTotalFormatado}
-          sx={{ width: 150 }}
+          sx={{ width: { xs: "100%", sm: 150 } }}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -581,7 +588,7 @@ const ProdutosOrcamento = ({
           }}
         />
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, justifyContent: { xs: "flex-end", md: "center" } }}>
           <Tooltip title={editandoId ? "Atualizar" : "Adicionar"}>
             <span>
               <IconButton
