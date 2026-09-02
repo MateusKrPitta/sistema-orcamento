@@ -960,14 +960,13 @@ const EditarOrcamento = ({
                         ),
                       }}
                     >
-                      <MenuItem value="pendente_ligacao">
-                        Pendente Ligação
-                      </MenuItem>
+                      <MenuItem value="pendente_ligacao">Pendente Ligação</MenuItem>
                       <MenuItem value="cancelado">Cancelado</MenuItem>
-                      <MenuItem value="venda_concluida">
-                        Venda Concluída
-                      </MenuItem>
+                      <MenuItem value="venda_concluida">Venda Concluída</MenuItem>
                       <MenuItem value="em_andamento">Em Andamento</MenuItem>
+                      <MenuItem value="em_orcamento">Em Orçamento</MenuItem>
+                      <MenuItem value="producao">Produção</MenuItem>
+                      <MenuItem value="entregue">Entregue</MenuItem>
                     </TextField>
                     <Autocomplete
                       size="small"

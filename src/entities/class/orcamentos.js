@@ -30,6 +30,9 @@ const formatarStatus = (status) => {
     em_andamento: "Em Andamento",
     venda_concluida: "Venda Concluída",
     cancelado: "Cancelado",
+    em_orcamento: "Em Orçamento",
+    producao: "Produção",
+    entregue: "Entregue",
   };
   return statusMap[status] || status;
 };

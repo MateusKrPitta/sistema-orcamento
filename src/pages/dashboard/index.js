@@ -42,6 +42,9 @@ const Dashboard = () => {
     em_andamento: "#42A5F5",
     venda_concluida: "#66BB6A",
     cancelado: "#EF5350",
+    em_orcamento: "#AB47BC",
+    producao: "#26C6DA",
+    entregue: "#8D6E63",
   };
 
   const STATUS_LABELS = {
@@ -49,6 +52,9 @@ const Dashboard = () => {
     em_andamento: "Em Andamento",
     venda_concluida: "Venda Concluída",
     cancelado: "Cancelado",
+    em_orcamento: "Em Orçamento",
+    producao: "Produção",
+    entregue: "Entregue",
   };
 
   const transformStatusData = useCallback((porStatus) => {

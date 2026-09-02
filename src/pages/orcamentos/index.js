@@ -1081,6 +1081,36 @@ const Orcamentos = () => {
                 >
                   Cancelado
                 </MenuItem>
+                <MenuItem
+                  value="em_orcamento"
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(163, 203, 57, 0.1)",
+                    },
+                  }}
+                >
+                  Em Orçamento
+                </MenuItem>
+                <MenuItem
+                  value="producao"
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(163, 203, 57, 0.1)",
+                    },
+                  }}
+                >
+                  Produção
+                </MenuItem>
+                <MenuItem
+                  value="entregue"
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(163, 203, 57, 0.1)",
+                    },
+                  }}
+                >
+                  Entregue
+                </MenuItem>
               </TextField>
 
               {/* Botões */}
